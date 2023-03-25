@@ -3,8 +3,9 @@ import json
 import openai
 import argparse
 import datetime
+from pydub import AudioSegment
 import importlib.metadata
-from typing import Dict
+from typing import Dict, List, Union
 
 #  Note: you need to be using OpenAI Python v0.27.0 for the code below to work
 version = importlib.metadata.version('openai')
@@ -15,13 +16,13 @@ def read_api_key(file_path: str = "api_key") -> str:
         return f.read()
 
 
-def transcript(api_key: str, audio_dir: str, prompt: str = "Hello, this is a transcript.") -> Dict:
+def transcript(audio_dir: str, prompt: str = "Hello, this is a transcript.") -> Dict:
     audio_file = open(audio_dir, "rb")
     transcript_ = openai.Audio.transcribe("whisper-1", audio_file, initial_prompt=prompt)
     return transcript_
 
 
-def translate(api_key: str, audio_dir: str, prompt: str = "Hello, this is a translation.") -> Dict:
+def translate(audio_dir: str, prompt: str = "Hello, this is a translation.") -> Dict:
     audio_file = open(audio_dir, "rb")
     translated_transcript = openai.Audio.translate("whisper-1", audio_file, initial_prompt=prompt)
     return translated_transcript
@@ -37,6 +38,54 @@ def save_out(_dict_: Dict, save_loc: str, _type_: str) -> None:
         json.dump(_dict_, f)
 
 
+def chunk_audio(file_to_check: str, format: str, save_loc: str) -> List:
+    audio_file = AudioSegment.from_file(file_to_check, format=format)
+
+    # Split the audio into 30-minute chunks
+    chunk_length_ms = 30 * 60 * 1000
+    chunks = list(range(0, len(audio_file), chunk_length_ms))
+    
+    # Create a directory to save the chunks
+    chunk_save_loc = f"{save_loc}/chunks/"
+    if not os.path.exists(chunk_save_loc):
+        os.mkdir(chunk_save_loc)
+
+    chunk_files = []
+    for i, chunk_start in enumerate(chunks):
+        chunk = audio_file[chunk_start:chunk_start + chunk_length_ms]
+        save_name = f"{chunk_save_loc}/chunk_{i}.mp3"
+        print(f"Saving to: {save_name}")
+        chunk_files.append(save_name)
+        chunk.export(save_name, format="mp3")
+    return chunk_files
+
+
+def check_file_size(file_to_check: str, save_loc: str) -> Union[List, None]:
+    print(file_to_check)
+    if os.stat(file_to_check).st_size > 0:
+        if os.stat(file_to_check).st_size > 2e7:
+            if "m4a" in file_to_check:
+                format = "m4a"
+                chunk_files = chunk_audio(file_to_check, format, save_loc)
+                return chunk_files
+                
+            elif "mp3" in file_to_check:
+                format = "mp3"
+                chunk_files = chunk_audio(file_to_check, format, save_loc)
+                return chunk_files
+            
+            else:
+                print("No audio file found.")
+    else:
+        pass
+
+
+def T_or_T(t_audio_file, prompt, save_loc, save, _type_):
+    t_ = transcript(t_audio_file, prompt)
+    print(f"{_type_}: {t_}")
+    save_out(t_, save_loc, f"{_type_}-{save}")
+
+
 # Load your API key from an environment variable or secret management service
 # get api key
 def main():
@@ -44,6 +93,7 @@ def main():
     #################### ARG PARSING
     parser = argparse.ArgumentParser(description='Transcribe or translate audio to text.')
     parser.add_argument('-p', '--prompt', help='Prompt if desired e.g. Hello, this is a translation. is the default used to ensure punctuation, acronyms are useful here too.')
+    parser.add_argument('-s', '--save', help='string to make save file unique', default = "1")
     parser.add_argument('-o', '--out', help='Full path to save the audio clips. e.g. /mnt/usersData/whisper/')
     parser.add_argument('-a', '--apiKeyPath', help='Location of api key.')
     parser.add_argument('-t', '--transcribe', help='Location of audio file to transcribe to be used in mp3 format.')
@@ -51,6 +101,7 @@ def main():
     args = parser.parse_args()
 
     prompt = args.prompt
+    save = args.save
     save_loc = args.out
     apiKeyPath = args.apiKeyPath
     transcribe_audio_file = args.transcribe
@@ -64,15 +115,35 @@ def main():
     
     openai.api_key = api_key
 
-    if os.path.isfile(transcribe_audio_file):
-        transcript_ = transcript(api_key, transcribe_audio_file, prompt)
-        print(f"Transcript: {transcript_}")
-        save_out(transcript_, save_loc, "transcript")
+    if os.path.isfile(transcribe_audio_file) and not None:
+        # fix issue with overly large files.
+        chunk_files = check_file_size(transcribe_audio_file, save_loc)
+        
+        if chunk_files is not None:
+            for n, cf in enumerate(chunk_files):
+                T_or_T(cf, prompt, save_loc, save, f"transcript-{n}")
 
-    if os.path.isfile(translate_audio_file):
-        translated_transcript = translate(api_key, translate_audio_file, prompt)
-        print(f"Translated transcript: {translated_transcript}")
-        save_out(translated_transcript, save_loc, "translated")
+        else:
+             T_or_T(transcribe_audio_file, prompt, save_loc, save, "transcript")
+
+        # transcript_ = transcript(transcribe_audio_file, prompt)
+        # print(f"Transcript: {transcript_}")
+        # save_out(transcript_, save_loc, f"transcript-{save}")
+
+    if os.path.isfile(translate_audio_file) and not None:
+        # fix issue with overly large files.
+        chunk_files = check_file_size(translate_audio_file, save_loc)
+
+        if chunk_files is not None:
+            for n, cf in enumerate(chunk_files):
+                T_or_T(cf, prompt, save_loc, save, f"translated-transcript-{n}")
+
+        else:
+             T_or_T(translate_audio_file, prompt, save_loc, save, "translated-transcript")
+
+        # translated_transcript = translate(translate_audio_file, prompt)
+        # print(f"Translated transcript: {translated_transcript}")
+        # save_out(translated_transcript, save_loc, f"translated-{save}")
 
 
 if __name__ == '__main__':
