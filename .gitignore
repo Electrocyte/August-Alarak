@@ -162,3 +162,5 @@ cython_debug/
 voice-build.json
 api_key
 *.mp3
+bot_token
+*.ogg

@@ -6,6 +6,8 @@ name = "pypi"
 [packages]
 openai = "*"
 pydub = "*"
+requests = "*"
+python-telegram-bot = "*"
 
 [dev-packages]
 
