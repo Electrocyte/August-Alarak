@@ -38,7 +38,7 @@ async def start(allow_uID: List[int], update: Update, context: ContextTypes.DEFA
 
 
 async def voice_handler(allow_uID: List[int], botKeyPath: str, save_loc: str, prompt: str, save: str, \
-                        update: Update, context: ContextTypes.DEFAULT_TYPE):
+                        update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not check_uID(update, allow_uID):
         return
     
