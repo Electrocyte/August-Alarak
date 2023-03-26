@@ -11,9 +11,10 @@ from typing import Dict, List, Union
 version = importlib.metadata.version('openai')
 print(f"Current version of Open AI: {version}")
 
+
 def read_api_key(file_path: str = "api_key") -> str:
     with open(file_path, "r") as f:
-        return f.read()
+        return f.read().strip()
 
 
 def transcript(audio_dir: str, prompt: str = "Hello, this is a transcript.") -> Dict:
@@ -80,10 +81,14 @@ def check_file_size(file_to_check: str, save_loc: str) -> Union[List, None]:
         pass
 
 
-def T_or_T(t_audio_file, prompt, save_loc, save, _type_):
-    t_ = transcript(t_audio_file, prompt)
+def T_or_T(t_audio_file, prompt, save_loc, save, _type_) -> Dict:
+    if _type_ == 'transcript':
+        t_ = transcript(t_audio_file, prompt)
+    elif _type_ == 'translated-transcript':
+        t_ = translate(t_audio_file, prompt)
     print(f"{_type_}: {t_}")
     save_out(t_, save_loc, f"{_type_}-{save}")
+    return t_
 
 
 # Load your API key from an environment variable or secret management service
@@ -92,7 +97,7 @@ def main():
 
     #################### ARG PARSING
     parser = argparse.ArgumentParser(description='Transcribe or translate audio to text.')
-    parser.add_argument('-p', '--prompt', help='Prompt if desired e.g. Hello, this is a translation. is the default used to ensure punctuation, acronyms are useful here too.')
+    parser.add_argument('-p', '--prompt', help='Prompt if desired e.g. Hello, this is a translation.', default = 'This default is used to ensure punctuation, acronyms are useful here too.')
     parser.add_argument('-s', '--save', help='string to make save file unique', default = "1")
     parser.add_argument('-o', '--out', help='Full path to save the audio clips. e.g. /mnt/usersData/whisper/')
     parser.add_argument('-a', '--apiKeyPath', help='Location of api key.')

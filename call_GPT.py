@@ -10,9 +10,10 @@ from typing import Dict
 version = importlib.metadata.version('openai')
 print(f"Current version of Open AI: {version}")
 
+
 def read_api_key(file_path: str = "api_key") -> str:
     with open(file_path, "r") as f:
-        return f.read()
+        return f.read().strip()
 
 
 def contact_GPT(json_read: Dict, prompt: str = "Minimise any other prose.") -> Dict:
@@ -58,7 +59,7 @@ def main():
     #################### ARG PARSING
     parser = argparse.ArgumentParser(description='Transcribe or translate audio to text.')
     parser.add_argument('-o', '--out', help='Full path to save the text file. e.g. /mnt/usersData/chat-GPT/')
-    parser.add_argument('-a', '--apiKeyPath', help='Location of api key.')
+    parser.add_argument('-a', '--apiKeyPath', help='Location of api key.', default = "")
     parser.add_argument('-t', '--textFile', help='Location of text file to work on.')
     parser.add_argument('-p', '--prompt', help='Any additional prompt.')
     args = parser.parse_args()

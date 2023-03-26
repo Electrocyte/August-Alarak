@@ -1,25 +1,47 @@
 import logging
 import os
-import sys
-from functools import partial
 import argparse
-from telegram import Update, InputFile
+import openai
+import whisper
+from telegram import Update
+from typing import List
+from pydub import AudioSegment
+from functools import partial
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, filters
 
 
+def read_allowed_uID(file_path: str = "allowed_userID") -> List[int]:
+    with open(file_path, "r") as f:
+        return [int(line) for line in f]
+    
 
 def read_bot_token(file_path: str = "bot_token") -> str:
     with open(file_path, "r") as f:
         return f.read()
 
 
+def check_uID(update: Update, allowed_uIDs: List) -> bool:
+    if len(allowed_uIDs) == 0:
+        return True
+    return update.effective_user.id in allowed_uIDs
+
+
 # The goal is to have this function called every time the Bot receives a Telegram message that contains the /start command.
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def start(allow_uID: List[int], update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not check_uID(update, allow_uID):
+        await context.bot.send_message(chat_id=update.effective_chat.id, \
+                                   text=f"Your user ID: {update.effective_user.id}. Please use your own api key <3")
+        return
+
     await context.bot.send_message(chat_id=update.effective_chat.id, \
-                                   text="Send me a voice message and I'll send it back as an audio file!")
+                                   text=f"Send me a voice message and I'll send it back as an audio file! Your user ID: {update.effective_user.id}")
 
 
-async def voice_handler(botKeyPath: str, update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def voice_handler(allow_uID: List[int], botKeyPath: str, save_loc: str, prompt: str, save: str, \
+                        update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not check_uID(update, allow_uID):
+        return
+    
     voice = update.message.voice
 
     if voice:
@@ -29,25 +51,59 @@ async def voice_handler(botKeyPath: str, update: Update, context: ContextTypes.D
         await file.download_to_drive(file_path)
         print(f"Downloaded {file_path}.")
 
-        # with open(file_path, "rb") as audio_file:
-        #     await context.bot.send_audio(chat_id=update.effective_chat.id, audio=InputFile(audio_file), title="Converted audio")
+        new_file = file_path.replace("ogg", "mp3")
+        audio = AudioSegment.from_ogg(file_path)
+        audio.export(new_file, format="mp3")
+        print(f"Changing format to mp3: {new_file}.\n")
 
-        # os.remove(file_path)
+        # fix issue with overly large files.
+        chunk_files = whisper.check_file_size(new_file, save_loc)
+        transcript_text = {}
+        if chunk_files is not None:
+            for n, cf in enumerate(chunk_files):
+                transcript_text = whisper.T_or_T(cf, prompt, save_loc, save, f"transcript-{n}")
+
+        else:
+            transcript_text = whisper.T_or_T(new_file, prompt, save_loc, save, "transcript")
+
+        await context.bot.send_message(chat_id=update.effective_chat.id, text = transcript_text["text"])
+
+        os.remove(file_path)
 
 
 def main():
 
     #################### ARG PARSING
     parser = argparse.ArgumentParser(description='Save telegram audio.')
+    parser.add_argument('-p', '--prompt', help='Prompt if desired e.g. Hello, this is a translation.', default = 'This default is used to ensure punctuation, acronyms are useful here too.')
     parser.add_argument('-b', '--botKeyPath', help='Location of bot token.')
+    parser.add_argument('-o', '--out', help='Full path to save the audio clips. e.g. /mnt/usersData/whisper/')
+    parser.add_argument('-s', '--save', help='string to make save file unique', default = "1")
+    parser.add_argument('-a', '--apiKeyPath', help='Location of api key.')
     args = parser.parse_args()
 
+    save = args.save
+    prompt = args.prompt
+    save_loc = args.out
+    apiKeyPath = args.apiKeyPath
     botKeyPath = args.botKeyPath
 
     try:
-        bot_token = read_bot_token()
-    except:
         bot_token = read_bot_token(f"{botKeyPath}/bot_token")
+    except:
+        bot_token = read_bot_token()
+
+    try:
+        api_key = whisper.read_api_key(f"{apiKeyPath}/api_key")
+    except:
+        api_key = whisper.read_api_key()
+
+    try:
+        allowed_userID = read_allowed_uID()
+    except:
+        allowed_userID = []
+
+    openai.api_key = api_key
 
     # Replace with your bot token
     TELEGRAM_API_TOKEN = bot_token
@@ -56,9 +112,10 @@ def main():
 
     application = ApplicationBuilder().token(TELEGRAM_API_TOKEN).build()
 
-    start_handler = CommandHandler('start', start)
+    start_part_func = partial(start, allowed_userID)
+    start_handler = CommandHandler('start', start_part_func)
 
-    part_func = partial(voice_handler, botKeyPath)
+    part_func = partial(voice_handler, allowed_userID, botKeyPath, save_loc, prompt, save)
     voice_msg_handler = MessageHandler(filters.VOICE, part_func)
     
     application.add_handler(start_handler)

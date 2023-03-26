@@ -164,3 +164,4 @@ api_key
 *.mp3
 bot_token
 *.ogg
+allowed_userID
