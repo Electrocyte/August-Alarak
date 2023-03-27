@@ -3,6 +3,7 @@ import os
 import argparse
 import openai
 import whisper
+import elevenLabs
 from telegram import Update
 from typing import List
 from pydub import AudioSegment
@@ -78,8 +79,9 @@ async def voice_handler(allow_uID: List[int], botKeyPath: str, save_loc: str, pr
         os.remove(file_path)
         os.remove(new_file)
 
+
 # The goal is to have this function called every time the Bot receives a Telegram message that contains the /start command.
-async def say(allow_uID: List[int], update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def say(allow_uID: List[int], apiKeyPath, out_loc, update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not check_uID(update, allow_uID):
         return
 
@@ -98,6 +100,9 @@ async def say(allow_uID: List[int], update: Update, context: ContextTypes.DEFAUL
         text = " ".join(context.args)
 
     await update.message.reply_text(f"I shall say {text}")
+
+    tts = elevenLabs.main(apiKeyPath, text, out_loc)
+    await update.message.reply_audio(tts, title = f"{text[:20]}...", performer = "Alarak")
     
 
 def main():
@@ -146,7 +151,7 @@ def main():
     start_part_func = partial(start, allowed_userID)
     start_handler = CommandHandler('start', start_part_func)
 
-    say_part_func = partial(say, allowed_userID)
+    say_part_func = partial(say, allowed_userID, apiKeyPath, save_loc)
     say_handler = CommandHandler('say', say_part_func)
 
     part_func = partial(voice_handler, allowed_userID, botKeyPath, save_loc, prompt, save)
