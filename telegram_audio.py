@@ -23,11 +23,13 @@ def read_bot_token(file_path: str = "bot_token") -> str:
 def check_uID(update: Update, allowed_uIDs: List) -> bool:
     if len(allowed_uIDs) == 0:
         return True
-    return update.effective_user.id in allowed_uIDs
+    return update.effective_chat.id in allowed_uIDs
 
 
 # The goal is to have this function called every time the Bot receives a Telegram message that contains the /start command.
 async def start(allow_uID: List[int], update: Update, context: ContextTypes.DEFAULT_TYPE):
+    chat_id = update.message.chat_id
+    print(f"Chat ID: {chat_id}")
     if not check_uID(update, allow_uID):
         await context.bot.send_message(chat_id=update.effective_chat.id, \
                                    text=f"Your user ID: {update.effective_user.id}. Please use your own api key <3")
@@ -37,8 +39,13 @@ async def start(allow_uID: List[int], update: Update, context: ContextTypes.DEFA
                                    text=f"Send me a voice message and I'll send it back as an audio file! Your user ID: {update.effective_user.id}")
 
 
+# async def debug_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+#     await context.bot.send_message(chat_id=update.effective_chat.id, text = update.message.to_json())
+
+
 async def voice_handler(allow_uID: List[int], botKeyPath: str, save_loc: str, prompt: str, save: str, \
                         update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    print(f"Received message: {update.effective_user.id}, {update.message.chat_id}")
     if not check_uID(update, allow_uID):
         return
     
@@ -116,10 +123,15 @@ def main():
     start_handler = CommandHandler('start', start_part_func)
 
     part_func = partial(voice_handler, allowed_userID, botKeyPath, save_loc, prompt, save)
-    voice_msg_handler = MessageHandler(filters.VOICE, part_func)
+    voice_msg_handler = MessageHandler(filters.VOICE | filters.AUDIO, part_func)
+    # filters.ChatType.GROUPS
     
-    application.add_handler(start_handler)
+    # handle other audio file types provided
+    # handle system files provided not from telegram
+    # debugged_handler = MessageHandler(None, debug_handler)
 
+    application.add_handler(start_handler)
+    # application.add_handler(debugged_handler)
     application.add_handler(voice_msg_handler)
 
     application.run_polling()
@@ -135,4 +147,3 @@ if __name__ == '__main__':
 #     You've created a voice_handler function that handles voice messages. The function is called when the bot receives a voice message, and it downloads the file to the specified directory.
 #     You've updated the main function to use ApplicationBuilder for creating the application object, and you've registered the start_handler and voice_msg_handler with the application.
 #     Finally, you've set up argument parsing to accept the bot key path as a command-line argument.
-
