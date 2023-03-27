@@ -8,6 +8,7 @@ openai = "*"
 pydub = "*"
 requests = "*"
 python-telegram-bot = "*"
+dataclasses-json = "*"
 
 [dev-packages]
 

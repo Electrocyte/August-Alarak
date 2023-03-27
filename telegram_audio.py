@@ -78,6 +78,27 @@ async def voice_handler(allow_uID: List[int], botKeyPath: str, save_loc: str, pr
         os.remove(file_path)
         os.remove(new_file)
 
+# The goal is to have this function called every time the Bot receives a Telegram message that contains the /start command.
+async def say(allow_uID: List[int], update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not check_uID(update, allow_uID):
+        return
+
+    text = ""
+
+    # /say as reply to another message
+    if update.message.reply_to_message is not None:
+        # This is a reply to another message
+        original_message = update.message.reply_to_message
+        if original_message.text is None:
+            await update.message.reply_text("I cannot possibly say that!")
+            return
+        text = original_message.text
+    # /say <TYPE TEXT>
+    else:
+        text = " ".join(context.args)
+
+    await update.message.reply_text(f"I shall say {text}")
+    
 
 def main():
 
@@ -125,6 +146,9 @@ def main():
     start_part_func = partial(start, allowed_userID)
     start_handler = CommandHandler('start', start_part_func)
 
+    say_part_func = partial(say, allowed_userID)
+    say_handler = CommandHandler('say', say_part_func)
+
     part_func = partial(voice_handler, allowed_userID, botKeyPath, save_loc, prompt, save)
     voice_msg_handler = MessageHandler(filters.VOICE | filters.AUDIO, part_func)
     # debugged_handler = MessageHandler(None, debug_handler)   
@@ -135,6 +159,8 @@ def main():
     application.add_handler(start_handler)
     application.add_handler(voice_msg_handler)
     # application.add_handler(debugged_handler)
+    application.add_handler(say_handler)
+
 
     application.run_polling()
 
