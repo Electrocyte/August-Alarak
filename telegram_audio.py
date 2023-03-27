@@ -73,9 +73,10 @@ async def voice_handler(allow_uID: List[int], botKeyPath: str, save_loc: str, pr
         else:
             transcript_text = whisper.T_or_T(new_file, prompt, save_loc, save, "transcript")
 
-        await context.bot.send_message(chat_id=update.effective_chat.id, text = transcript_text["text"])
+        await context.bot.send_message(chat_id=update.effective_chat.id, text = transcript_text["text"], reply_to_message_id=update.message.id)
 
         os.remove(file_path)
+        os.remove(new_file)
 
 
 def main():
@@ -116,6 +117,8 @@ def main():
     TELEGRAM_API_TOKEN = bot_token
 
     logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+    
+    groups_filter = filters.ChatType.GROUPS
 
     application = ApplicationBuilder().token(TELEGRAM_API_TOKEN).build()
 
@@ -124,15 +127,14 @@ def main():
 
     part_func = partial(voice_handler, allowed_userID, botKeyPath, save_loc, prompt, save)
     voice_msg_handler = MessageHandler(filters.VOICE | filters.AUDIO, part_func)
-    # filters.ChatType.GROUPS
+    # debugged_handler = MessageHandler(None, debug_handler)   
     
     # handle other audio file types provided
     # handle system files provided not from telegram
-    # debugged_handler = MessageHandler(None, debug_handler)
 
     application.add_handler(start_handler)
-    # application.add_handler(debugged_handler)
     application.add_handler(voice_msg_handler)
+    # application.add_handler(debugged_handler)
 
     application.run_polling()
 
