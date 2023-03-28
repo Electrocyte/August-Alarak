@@ -41,7 +41,7 @@ def direct_contact_GPT(text: str, prompt: str = "Minimise any other prose.") -> 
 
     reply = openai.ChatCompletion.create(
         model="gpt-3.5-turbo-0301",
-        id = "chatcmpl-6z2Dbtif3GwjTkGNkepXWKsRPGB1Q",
+        # id = "chatcmpl-6z2Dbtif3GwjTkGNkepXWKsRPGB1Q",
         messages = [
                 {"role": "system", "content": "You are High Lord Alarak. Your exquisite prose is Legendary."},
                 {"role": "user", "content": full_prompt},
