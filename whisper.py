@@ -9,7 +9,7 @@ from typing import Dict, List, Union
 
 #  Note: you need to be using OpenAI Python v0.27.0 for the code below to work
 version = importlib.metadata.version('openai')
-print(f"Current version of Open AI: {version}")
+print(f"Whisper online; current version of Open AI: {version}")
 
 
 def read_api_key(file_path: str = "api_key") -> str:
@@ -45,7 +45,7 @@ def chunk_audio(file_to_check: str, format: str, save_loc: str) -> List:
     # Split the audio into 30-minute chunks
     chunk_length_ms = 30 * 60 * 1000
     chunks = list(range(0, len(audio_file), chunk_length_ms))
-    
+
     # Create a directory to save the chunks
     chunk_save_loc = f"{save_loc}/chunks/"
     if not os.path.exists(chunk_save_loc):
@@ -69,12 +69,12 @@ def check_file_size(file_to_check: str, save_loc: str) -> Union[List, None]:
                 format = "m4a"
                 chunk_files = chunk_audio(file_to_check, format, save_loc)
                 return chunk_files
-                
+
             elif "mp3" in file_to_check:
                 format = "mp3"
                 chunk_files = chunk_audio(file_to_check, format, save_loc)
                 return chunk_files
-            
+
             else:
                 print("No audio file found.")
     else:
@@ -117,13 +117,13 @@ def main():
         api_key = read_api_key()
     except:
         api_key = read_api_key(f"{apiKeyPath}/api_key")
-    
+
     openai.api_key = api_key
 
     if os.path.isfile(transcribe_audio_file) and not None:
         # fix issue with overly large files.
         chunk_files = check_file_size(transcribe_audio_file, save_loc)
-        
+
         if chunk_files is not None:
             for n, cf in enumerate(chunk_files):
                 T_or_T(cf, prompt, save_loc, save, f"transcript-{n}")

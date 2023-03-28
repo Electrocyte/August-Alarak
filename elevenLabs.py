@@ -7,7 +7,7 @@ import model
 import datetime
 
 BASE_URL = "https://api.elevenlabs.io/v1"
-
+print(f"ElevenLabs script online")
 
 def read_api_key(file_path: str = "11_api_key") -> str:
     with open(file_path, "r") as f:

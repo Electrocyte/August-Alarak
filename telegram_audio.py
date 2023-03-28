@@ -3,6 +3,7 @@ import os
 import argparse
 import openai
 import whisper
+import call_GPT
 import elevenLabs
 from telegram import Update
 from typing import List
@@ -84,6 +85,36 @@ async def voice_handler(allow_uID: List[int], botKeyPath: str, save_loc: str, pr
         os.remove(new_file)
 
 
+# currently loses state with every call - i.e. no memory
+# prompt vs text, does it matter?
+async def gpt(allow_uID: List[int], apiKeyPath, out_loc, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not check_uID(update, allow_uID):
+        return
+
+    text = ""
+    # /gpt as reply to another message
+    if update.message.reply_to_message is not None:
+        original_message = update.message.reply_to_message
+        if original_message.text is None:
+            await update.message.reply_text("I cannot possibly say that!")
+            return
+        text = original_message.text
+    # /gpt <TYPE TEXT>
+    else:
+        text = " ".join(context.args)
+
+    # await update.message.reply_text(f"I will soon be ENHANCED by GPT-3.5! Tremble!!! Your query: {text}")
+    text = text.strip()
+
+    if len(text) == 0:
+        await update.message.reply_text(f"Even chat-GPT can't help you with the void!")
+    else:
+        # handle json file from transcript.
+        GPT_reply = call_GPT.direct_contact_GPT(text)
+        the_reply = GPT_reply['choices'][0]['message']['content']
+        await update.message.reply_text(the_reply)
+
+
 # The goal is to have this function called every time the Bot receives a Telegram message that contains the /start command.
 async def say(allow_uID: List[int], apiKeyPath, out_loc, update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not check_uID(update, allow_uID):
@@ -161,6 +192,9 @@ def main():
     say_part_func = partial(say, allowed_userID, apiKeyPath, save_loc)
     say_handler = CommandHandler('say', say_part_func)
 
+    gpt_part_func = partial(gpt, allowed_userID, apiKeyPath, save_loc)
+    gpt_handler = CommandHandler('gpt', gpt_part_func)
+
     part_func = partial(voice_handler, allowed_userID, botKeyPath, save_loc, prompt, save)
     voice_msg_handler = MessageHandler(filters.VOICE | filters.AUDIO, part_func)
     # debugged_handler = MessageHandler(None, debug_handler)
@@ -172,6 +206,7 @@ def main():
     application.add_handler(voice_msg_handler)
     # application.add_handler(debugged_handler)
     application.add_handler(say_handler)
+    application.add_handler(gpt_handler)
 
 
     application.run_polling()

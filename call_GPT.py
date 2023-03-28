@@ -8,7 +8,7 @@ from typing import Dict
 
 #  Note: you need to be using OpenAI Python v0.27.0 for the code below to work
 version = importlib.metadata.version('openai')
-print(f"Current version of Open AI: {version}")
+print(f"Chat-GPT script online; current version of Open AI: {version}")
 
 
 def read_api_key(file_path: str = "api_key") -> str:
@@ -16,14 +16,33 @@ def read_api_key(file_path: str = "api_key") -> str:
         return f.read().strip()
 
 
-def contact_GPT(json_read: Dict, prompt: str = "Minimise any other prose.") -> Dict:
+def json_contact_GPT(json_read: Dict, prompt: str = "Minimise any other prose.") -> Dict:
     full_prompt = f"{prompt} {list(json_read.values())[0]}"
     print(f"{full_prompt}\n")
-    
+
     reply = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages = [
-                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "system", "content": "You are High Lord Alarak. Your exquisite prose is Legendary."},
+                {"role": "user", "content": full_prompt},
+                # {"role": "assistant", "content": "The Los Angeles Dodgers won the World Series in 2020."},
+                # {"role": "user", "content": "Where was it played?"}
+            ]
+        )
+    return reply
+
+
+def direct_contact_GPT(text: str, prompt: str = "Minimise any other prose.") -> Dict:
+    full_prompt = f"{prompt} {text}"
+    print(f"{full_prompt}\n")
+
+    # {"id": "chatcmpl-6z2Dbtif3GwjTkGNkepXWKsRPGB1Q"}
+    # {"model": "gpt-3.5-turbo-0301"}
+
+    reply = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages = [
+                {"role": "system", "content": "You are High Lord Alarak. Your exquisite prose is Legendary."},
                 {"role": "user", "content": full_prompt},
                 # {"role": "assistant", "content": "The Los Angeles Dodgers won the World Series in 2020."},
                 # {"role": "user", "content": "Where was it played?"}
@@ -38,9 +57,9 @@ def save_out(response: Dict, save_loc: str, _type_: str) -> None:
     usage = response['usage']
     finish_reason = response['choices'][0]['finish_reason']
     finish_reasons = {"stop": "API returned complete model output", "length": "Incomplete model output due to max_tokens parameter or token limit", "content_filter": "Omitted content due to a flag from our content filters", "null": "API response still in progress or incomplete"}
-    
+
     print(f"{finish_reason}, {finish_reasons[finish_reason]}")
-    
+
     to_save = {"Reply": the_reply, "Completion status": finish_reasons[finish_reason], "Model": model, "Usage": usage}
 
     # # Save the dictionary to a JSON file
@@ -77,11 +96,11 @@ def main():
         api_key = read_api_key()
     except:
         api_key = read_api_key(f"{apiKeyPath}/api_key")
-    
+
     openai.api_key = api_key
 
     if os.path.isfile(input_file):
-        GPT_reply = contact_GPT(json_read, prompt)
+        GPT_reply = json_contact_GPT(json_read, prompt)
         # print(f"GPT reply: {GPT_reply}")
         save_out(GPT_reply, save_loc, "gpt")
 
