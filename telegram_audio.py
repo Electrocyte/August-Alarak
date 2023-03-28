@@ -14,7 +14,7 @@ from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, Messa
 def read_allowed_uID(file_path: str = "allowed_userID") -> List[int]:
     with open(file_path, "r") as f:
         return [int(line) for line in f]
-    
+
 
 def read_bot_token(file_path: str = "bot_token") -> str:
     with open(file_path, "r") as f:
@@ -49,7 +49,11 @@ async def voice_handler(allow_uID: List[int], botKeyPath: str, save_loc: str, pr
     print(f"Received message: {update.effective_user.id}, {update.message.chat_id}")
     if not check_uID(update, allow_uID):
         return
-    
+
+    # check that the send is human for transcription
+    if update.message.from_user.is_bot:
+        return
+
     voice = update.message.voice
 
     if voice:
@@ -99,11 +103,14 @@ async def say(allow_uID: List[int], apiKeyPath, out_loc, update: Update, context
     else:
         text = " ".join(context.args)
 
-    await update.message.reply_text(f"I shall say {text}")
+    # await update.message.reply_text(f"I shall say {text}")
+    text = text.strip()
+    if len(text) == 0:
+        await update.message.reply_text(f"I have nothing to say!")
+    else:
+        tts = elevenLabs.main(apiKeyPath, text, out_loc)
+        await update.message.reply_audio(tts, title = f"{text[:20]}...", performer = "Alarak")
 
-    tts = elevenLabs.main(apiKeyPath, text, out_loc)
-    await update.message.reply_audio(tts, title = f"{text[:20]}...", performer = "Alarak")
-    
 
 def main():
 
@@ -143,7 +150,7 @@ def main():
     TELEGRAM_API_TOKEN = bot_token
 
     logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
-    
+
     groups_filter = filters.ChatType.GROUPS
 
     application = ApplicationBuilder().token(TELEGRAM_API_TOKEN).build()
@@ -156,8 +163,8 @@ def main():
 
     part_func = partial(voice_handler, allowed_userID, botKeyPath, save_loc, prompt, save)
     voice_msg_handler = MessageHandler(filters.VOICE | filters.AUDIO, part_func)
-    # debugged_handler = MessageHandler(None, debug_handler)   
-    
+    # debugged_handler = MessageHandler(None, debug_handler)
+
     # handle other audio file types provided
     # handle system files provided not from telegram
 
