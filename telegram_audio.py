@@ -94,11 +94,14 @@ async def gpt(allow_uID: List[int], apiKeyPath, out_loc, update: Update, context
     text = ""
     # /gpt as reply to another message
     if update.message.reply_to_message is not None:
+        prompt_text = " ".join(context.args)
         original_message = update.message.reply_to_message
         if original_message.text is None:
             await update.message.reply_text("I cannot possibly say that!")
             return
         text = original_message.text
+        if len(prompt_text) > 0:
+            text = f"{prompt_text}. {text}"
     # /gpt <TYPE TEXT>
     else:
         text = " ".join(context.args)
@@ -109,7 +112,7 @@ async def gpt(allow_uID: List[int], apiKeyPath, out_loc, update: Update, context
     if len(text) == 0:
         await update.message.reply_text(f"Even chat-GPT can't help you with the void!")
     else:
-        # handle json file from transcript.
+        # handle text file from transcript telegram.
         GPT_reply = call_GPT.direct_contact_GPT(text)
         the_reply = GPT_reply['choices'][0]['message']['content']
         await update.message.reply_text(the_reply)

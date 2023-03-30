@@ -32,7 +32,7 @@ def json_contact_GPT(json_read: Dict, prompt: str = "Minimise any other prose.")
     return reply
 
 
-def direct_contact_GPT(text: str, prompt: str = "Minimise any other prose.") -> Dict:
+def direct_contact_GPT(text: str, prompt: str = "Minimise any other prose. Reply in the style of a knowledgable expert where appropriate.") -> Dict:
     full_prompt = f"{prompt} {text}"
     print(f"{full_prompt}\n")
 
