@@ -144,8 +144,34 @@ async def translate(allow_uID: List[int], apiKeyPath, out_loc, update: Update, c
             os.remove(new_file)
 
 
+        text = ""
+        # /translate as reply to another message
+        if update.message.reply_to_message is not None:
+            prompt_text = " ".join(context.args)
+            original_message = update.message.reply_to_message
+            if original_message.text is None:
+                await update.message.reply_text("I cannot possibly say that!")
+                return
+            text = original_message.text
+            if len(prompt_text) > 0:
+                text = f"{prompt_text}. {text}"
+        # /translate <TYPE TEXT>
+        else:
+            text = " ".join(context.args)
+
+        text = text.strip()
+
+        if len(text) == 0:
+            await update.message.reply_text(f"Even chat-GPT can't help you with the void!")
+        else:
+            # handle text file from transcript telegram.
+            prompt = "Please translate the following, the only output should be the english translation without ANY additional text printed: "
+            GPT_reply = call_GPT.direct_contact_GPT(text, prompt)
+            the_reply = GPT_reply['choices'][0]['message']['content']
+            await update.message.reply_text(the_reply)
+
     else:
-        print("No input audio.")
+        print("No input audio, voice or text.")
     # or detect that the transcription is not english in voice_handler and then translate the original audio.
 
 
