@@ -85,6 +85,72 @@ async def voice_handler(allow_uID: List[int], botKeyPath: str, save_loc: str, pr
         os.remove(new_file)
 
 
+async def translate(allow_uID: List[int], apiKeyPath, out_loc, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not check_uID(update, allow_uID):
+        return
+
+    # translate using original audio either
+        # with state maintained (/translate -> audio) or
+
+    # by replying to voice or audio directly.
+    if update.message.reply_to_message is not None:
+        audio = update.message.reply_to_message.audio
+        voice = update.message.reply_to_message.voice
+
+        if audio:
+            file_id = audio.file_id
+            file = await context.bot.get_file(file_id)
+
+            file_path = os.path.join(apiKeyPath, f"{file.file_id}")
+
+            await file.download_to_drive(file_path)
+
+            file_audio = AudioSegment.from_file(file_path)
+
+            print(f"Downloaded {file_path}.")
+
+            new_file = f"{file_path}.mp3"
+
+            file_audio.export(new_file, format="mp3")
+            print(f"Changing format to mp3: {new_file}.\n")
+
+            translated_transcript = whisper.translate(new_file, "Translate to English")
+            await context.bot.send_message(chat_id=update.effective_chat.id, text = translated_transcript["text"], reply_to_message_id=update.message.id)
+
+            os.remove(file_path)
+            os.remove(new_file)
+
+        if voice:
+            file_id = voice.file_id
+            file = await context.bot.get_file(file_id)
+
+            file_path = os.path.join(apiKeyPath, f"{file.file_id}")
+
+            await file.download_to_drive(file_path)
+
+            file_voice = AudioSegment.from_file(file_path)
+
+            print(f"Downloaded {file_path}.")
+
+            new_file = f"{file_path}.mp3"
+
+            file_voice.export(new_file, format="mp3")
+            print(f"Changing format to mp3: {new_file}.\n")
+
+            translated_transcript = whisper.translate(new_file, "Translate to English")
+            await context.bot.send_message(chat_id=update.effective_chat.id, text = translated_transcript["text"], reply_to_message_id=update.message.id)
+
+            os.remove(file_path)
+            os.remove(new_file)
+
+
+    else:
+        print("No input audio.")
+    # or detect that the transcription is not english in voice_handler and then translate the original audio.
+
+
+
+
 # currently loses state with every call - i.e. no memory
 # prompt vs text, does it matter?
 async def gpt(allow_uID: List[int], apiKeyPath, out_loc, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -106,7 +172,6 @@ async def gpt(allow_uID: List[int], apiKeyPath, out_loc, update: Update, context
     else:
         text = " ".join(context.args)
 
-    # await update.message.reply_text(f"I will soon be ENHANCED by GPT-3.5! Tremble!!! Your query: {text}")
     text = text.strip()
 
     if len(text) == 0:
@@ -192,6 +257,9 @@ def main():
     start_part_func = partial(start, allowed_userID)
     start_handler = CommandHandler('start', start_part_func)
 
+    translate_part_func = partial(translate, allowed_userID, apiKeyPath, save_loc)
+    translate_handler = CommandHandler('translate', translate_part_func)
+
     say_part_func = partial(say, allowed_userID, apiKeyPath, save_loc)
     say_handler = CommandHandler('say', say_part_func)
 
@@ -209,6 +277,7 @@ def main():
     application.add_handler(voice_msg_handler)
     # application.add_handler(debugged_handler)
     application.add_handler(say_handler)
+    application.add_handler(translate_handler)
     application.add_handler(gpt_handler)
 
 

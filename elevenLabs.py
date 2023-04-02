@@ -53,7 +53,10 @@ def main(apiKeyPath: str, text: str, out_loc: str):
 
     now = datetime.datetime.now()
     formatted_time = now.strftime("%Y-%m-%d--%H-%M-%S")
-    save_file = f"{out_loc}/{formatted_time}-Alarak.mp3"
+    day = formatted_time.split("--")[0]
+    time = formatted_time.split("--")[1]
+    os.makedirs(f'{out_loc}/{day}/', exist_ok=True)
+    save_file = f"{out_loc}/{day}/{time}-Alarak.mp3"
 
     voice_setting = model.VoiceSetting(stab, simi)
     tts = text_to_speech(api_key, use_voice, \

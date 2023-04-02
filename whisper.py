@@ -33,7 +33,10 @@ def save_out(_dict_: Dict, save_loc: str, _type_: str) -> None:
     # Save the dictionary to a JSON file
     now = datetime.datetime.now()
     formatted_time = now.strftime("%Y-%m-%d--%H-%M-%S")
-    save_file = f'{save_loc}/{formatted_time}-{_type_}.json'
+    day = formatted_time.split("--")[0]
+    time = formatted_time.split("--")[1]
+    os.makedirs(f'{save_loc}/{day}/', exist_ok=True)
+    save_file = f'{save_loc}/{day}/{time}-{_type_}.json'
     with open(save_file, 'w') as f:
         print(save_file)
         json.dump(_dict_, f)
