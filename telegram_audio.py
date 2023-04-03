@@ -41,8 +41,33 @@ async def start(allow_uID: List[int], update: Update, context: ContextTypes.DEFA
                                    text=f"Send me a voice message and I'll send it back as an audio file! Your user ID: {update.effective_user.id}")
 
 
-# async def debug_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-#     await context.bot.send_message(chat_id=update.effective_chat.id, text = update.message.to_json())
+async def reply_to_text(update, context, prompt: str = ""):
+    text = ""
+    # /gpt as reply to another message
+    if update.message.reply_to_message is not None:
+        prompt_text = " ".join(context.args)
+        original_message = update.message.reply_to_message
+        if original_message.text is None:
+            await update.message.reply_text("I cannot possibly say that!")
+            return
+        text = original_message.text
+        if len(prompt_text) > 0:
+            text = f"{prompt_text}. {text}"
+    # /gpt <TYPE TEXT>
+    else:
+        text = " ".join(context.args)
+
+    text = text.strip()
+
+    if len(text) == 0:
+        await update.message.reply_text(f"Even chat-GPT can't help you with the void!")
+    else:
+        if prompt is None or prompt == "":
+            GPT_reply = call_GPT.direct_contact_GPT(text)
+        else:
+            GPT_reply = call_GPT.direct_contact_GPT(text, prompt)
+        the_reply = GPT_reply['choices'][0]['message']['content']
+        await update.message.reply_text(the_reply)
 
 
 async def voice_handler(allow_uID: List[int], botKeyPath: str, save_loc: str, prompt: str, save: str, \
@@ -89,30 +114,47 @@ async def english_to_french(allow_uID: List[int], update: Update, context: Conte
     if not check_uID(update, allow_uID):
         return
 
-    text = ""
-    # /e2f as reply to another message
-    if update.message.reply_to_message is not None:
-        prompt_text = " ".join(context.args)
-        original_message = update.message.reply_to_message
-        if original_message.text is None:
-            await update.message.reply_text("I cannot possibly say that!")
-            return
-        text = original_message.text
-        if len(prompt_text) > 0:
-            text = f"{prompt_text}. {text}"
-    # /e2f <TYPE TEXT>
-    else:
-        text = " ".join(context.args)
+    prompt = "Please translate the following from english to french, the only output should be the french translation without ANY additional text printed: "
+    await reply_to_text(update, context, prompt)
 
-    text = text.strip()
 
-    if len(text) == 0:
-        await update.message.reply_text(f"Even chat-GPT can't help you with the void!")
-    else:
-        prompt = "Please translate the following from english to french, the only output should be the french translation without ANY additional text printed: "
-        GPT_reply = call_GPT.direct_contact_GPT(text, prompt)
-        the_reply = GPT_reply['choices'][0]['message']['content']
-        await update.message.reply_text(the_reply)
+async def english_to_chinese(allow_uID: List[int], update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not check_uID(update, allow_uID):
+        return
+
+    prompt = "Please translate the following from english to chinese, the output should be the chinese translation followed by the chinese pinyin without ANY additional text printed: "
+    await reply_to_text(update, context, prompt)
+
+
+async def english_to_malay(allow_uID: List[int], update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not check_uID(update, allow_uID):
+        return
+
+    prompt = "Please translate the following from english to bahasa melayu, the output should be the bahasa melayu translation without ANY additional text printed: "
+    await reply_to_text(update, context. prompt)
+
+
+async def use_audio(apiKeyPath, update, context, file_id):
+    file = await context.bot.get_file(file_id)
+
+    file_path = os.path.join(apiKeyPath, f"{file.file_id}")
+
+    await file.download_to_drive(file_path)
+
+    file_audio = AudioSegment.from_file(file_path)
+
+    print(f"Downloaded {file_path}.")
+
+    new_file = f"{file_path}.mp3"
+
+    file_audio.export(new_file, format="mp3")
+    print(f"Changing format to mp3: {new_file}.\n")
+
+    translated_transcript = whisper.translate(new_file, "Translate to English")
+    await context.bot.send_message(chat_id=update.effective_chat.id, text = translated_transcript["text"], reply_to_message_id=update.message.id)
+
+    os.remove(file_path)
+    os.remove(new_file)
 
 
 async def translate(allow_uID: List[int], apiKeyPath, out_loc, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -131,80 +173,17 @@ async def translate(allow_uID: List[int], apiKeyPath, out_loc, update: Update, c
 
         if audio:
             file_id = audio.file_id
-            file = await context.bot.get_file(file_id)
-
-            file_path = os.path.join(apiKeyPath, f"{file.file_id}")
-
-            await file.download_to_drive(file_path)
-
-            file_audio = AudioSegment.from_file(file_path)
-
-            print(f"Downloaded {file_path}.")
-
-            new_file = f"{file_path}.mp3"
-
-            file_audio.export(new_file, format="mp3")
-            print(f"Changing format to mp3: {new_file}.\n")
-
-            translated_transcript = whisper.translate(new_file, "Translate to English")
-            await context.bot.send_message(chat_id=update.effective_chat.id, text = translated_transcript["text"], reply_to_message_id=update.message.id)
-
-            os.remove(file_path)
-            os.remove(new_file)
+            await use_audio(apiKeyPath, update, context, file_id)
 
         if voice:
             file_id = voice.file_id
-            file = await context.bot.get_file(file_id)
+            await use_audio(apiKeyPath, update, context, file_id)
 
-            file_path = os.path.join(apiKeyPath, f"{file.file_id}")
-
-            await file.download_to_drive(file_path)
-
-            file_voice = AudioSegment.from_file(file_path)
-
-            print(f"Downloaded {file_path}.")
-
-            new_file = f"{file_path}.mp3"
-
-            file_voice.export(new_file, format="mp3")
-            print(f"Changing format to mp3: {new_file}.\n")
-
-            translated_transcript = whisper.translate(new_file, "Translate to English")
-            await context.bot.send_message(chat_id=update.effective_chat.id, text = translated_transcript["text"], reply_to_message_id=update.message.id)
-
-            os.remove(file_path)
-            os.remove(new_file)
-
-
-        text = ""
-        # /translate as reply to another message
-        if update.message.reply_to_message is not None:
-            prompt_text = " ".join(context.args)
-            original_message = update.message.reply_to_message
-            if original_message.text is None:
-                await update.message.reply_text("I cannot possibly say that!")
-                return
-            text = original_message.text
-            if len(prompt_text) > 0:
-                text = f"{prompt_text}. {text}"
-        # /translate <TYPE TEXT>
-        else:
-            text = " ".join(context.args)
-
-        text = text.strip()
-
-        if len(text) == 0:
-            await update.message.reply_text(f"Even chat-GPT can't help you with the void!")
-        else:
-            # handle text file from transcript telegram.
-            prompt = "Please translate the following, the only output should be the english translation without ANY additional text printed: "
-            GPT_reply = call_GPT.direct_contact_GPT(text, prompt)
-            the_reply = GPT_reply['choices'][0]['message']['content']
-            await update.message.reply_text(the_reply)
+        prompt = "Please translate the following, the only output should be the english translation without ANY additional text printed: "
+        await reply_to_text(update, context, prompt)
 
     else:
         print("No input audio, voice or text.")
-    # or detect that the transcription is not english in voice_handler and then translate the original audio.
 
 
 # currently loses state with every call - i.e. no memory
@@ -213,8 +192,16 @@ async def gpt(allow_uID: List[int], update: Update, context: ContextTypes.DEFAUL
     if not check_uID(update, allow_uID):
         return
 
+    text = await reply_to_text(update, context)
+
+
+# The goal is to have this function called every time the Bot receives a Telegram message that contains the /start command.
+async def say(allow_uID: List[int], apiKeyPath, out_loc, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not check_uID(update, allow_uID):
+        return
+
     text = ""
-    # /gpt as reply to another message
+    # /say as reply to another message
     if update.message.reply_to_message is not None:
         prompt_text = " ".join(context.args)
         original_message = update.message.reply_to_message
@@ -224,42 +211,12 @@ async def gpt(allow_uID: List[int], update: Update, context: ContextTypes.DEFAUL
         text = original_message.text
         if len(prompt_text) > 0:
             text = f"{prompt_text}. {text}"
-    # /gpt <TYPE TEXT>
-    else:
-        text = " ".join(context.args)
-
-    text = text.strip()
-
-    if len(text) == 0:
-        await update.message.reply_text(f"Even chat-GPT can't help you with the void!")
-    else:
-        # handle text file from transcript telegram.
-        GPT_reply = call_GPT.direct_contact_GPT(text)
-        the_reply = GPT_reply['choices'][0]['message']['content']
-        await update.message.reply_text(the_reply)
-
-
-# The goal is to have this function called every time the Bot receives a Telegram message that contains the /start command.
-async def say(allow_uID: List[int], apiKeyPath, out_loc, update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not check_uID(update, allow_uID):
-        return
-
-    text = ""
-
-    # /say as reply to another message
-    if update.message.reply_to_message is not None:
-        # This is a reply to another message
-        original_message = update.message.reply_to_message
-        if original_message.text is None:
-            await update.message.reply_text("I cannot possibly say that!")
-            return
-        text = original_message.text
     # /say <TYPE TEXT>
     else:
         text = " ".join(context.args)
 
-    # await update.message.reply_text(f"I shall say {text}")
     text = text.strip()
+
     if len(text) == 0:
         await update.message.reply_text(f"I have nothing to say!")
     else:
@@ -319,6 +276,12 @@ def main():
     e2f_part_func = partial(english_to_french, allowed_userID)
     e2f_handler = CommandHandler('e2f', e2f_part_func)
 
+    e2c_part_func = partial(english_to_chinese, allowed_userID)
+    e2c_handler = CommandHandler('e2c', e2c_part_func)
+
+    e2m_part_func = partial(english_to_malay, allowed_userID)
+    e2m_handler = CommandHandler('e2m', e2m_part_func)
+
     say_part_func = partial(say, allowed_userID, apiKeyPath, save_loc)
     say_handler = CommandHandler('say', say_part_func)
 
@@ -327,17 +290,17 @@ def main():
 
     part_func = partial(voice_handler, allowed_userID, botKeyPath, save_loc, prompt, save)
     voice_msg_handler = MessageHandler(filters.VOICE | filters.AUDIO, part_func)
-    # debugged_handler = MessageHandler(None, debug_handler)
 
     # handle other audio file types provided
     # handle system files provided not from telegram
 
     application.add_handler(start_handler)
     application.add_handler(voice_msg_handler)
-    # application.add_handler(debugged_handler)
     application.add_handler(say_handler)
     application.add_handler(translate_handler)
     application.add_handler(e2f_handler)
+    application.add_handler(e2c_handler)
+    application.add_handler(e2m_handler)
     application.add_handler(gpt_handler)
 
 
