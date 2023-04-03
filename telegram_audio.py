@@ -85,9 +85,41 @@ async def voice_handler(allow_uID: List[int], botKeyPath: str, save_loc: str, pr
         os.remove(new_file)
 
 
+async def english_to_french(allow_uID: List[int], update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not check_uID(update, allow_uID):
+        return
+
+    text = ""
+    # /e2f as reply to another message
+    if update.message.reply_to_message is not None:
+        prompt_text = " ".join(context.args)
+        original_message = update.message.reply_to_message
+        if original_message.text is None:
+            await update.message.reply_text("I cannot possibly say that!")
+            return
+        text = original_message.text
+        if len(prompt_text) > 0:
+            text = f"{prompt_text}. {text}"
+    # /e2f <TYPE TEXT>
+    else:
+        text = " ".join(context.args)
+
+    text = text.strip()
+
+    if len(text) == 0:
+        await update.message.reply_text(f"Even chat-GPT can't help you with the void!")
+    else:
+        prompt = "Please translate the following from english to french, the only output should be the french translation without ANY additional text printed: "
+        GPT_reply = call_GPT.direct_contact_GPT(text, prompt)
+        the_reply = GPT_reply['choices'][0]['message']['content']
+        await update.message.reply_text(the_reply)
+
+
 async def translate(allow_uID: List[int], apiKeyPath, out_loc, update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not check_uID(update, allow_uID):
         return
+
+    # translate from english text to other language < specified >
 
     # translate using original audio either
         # with state maintained (/translate -> audio) or
@@ -175,11 +207,9 @@ async def translate(allow_uID: List[int], apiKeyPath, out_loc, update: Update, c
     # or detect that the transcription is not english in voice_handler and then translate the original audio.
 
 
-
-
 # currently loses state with every call - i.e. no memory
 # prompt vs text, does it matter?
-async def gpt(allow_uID: List[int], apiKeyPath, out_loc, update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def gpt(allow_uID: List[int], update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not check_uID(update, allow_uID):
         return
 
@@ -286,10 +316,13 @@ def main():
     translate_part_func = partial(translate, allowed_userID, apiKeyPath, save_loc)
     translate_handler = CommandHandler('translate', translate_part_func)
 
+    e2f_part_func = partial(english_to_french, allowed_userID)
+    e2f_handler = CommandHandler('e2f', e2f_part_func)
+
     say_part_func = partial(say, allowed_userID, apiKeyPath, save_loc)
     say_handler = CommandHandler('say', say_part_func)
 
-    gpt_part_func = partial(gpt, allowed_userID, apiKeyPath, save_loc)
+    gpt_part_func = partial(gpt, allowed_userID)
     gpt_handler = CommandHandler('gpt', gpt_part_func)
 
     part_func = partial(voice_handler, allowed_userID, botKeyPath, save_loc, prompt, save)
@@ -304,6 +337,7 @@ def main():
     # application.add_handler(debugged_handler)
     application.add_handler(say_handler)
     application.add_handler(translate_handler)
+    application.add_handler(e2f_handler)
     application.add_handler(gpt_handler)
 
 
