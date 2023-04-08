@@ -131,7 +131,7 @@ async def english_to_malay(allow_uID: List[int], update: Update, context: Contex
         return
 
     prompt = "Please translate the following from english to bahasa melayu, the output should be the bahasa melayu translation without ANY additional text printed: "
-    await reply_to_text(update, context. prompt)
+    await reply_to_text(update, context, prompt)
 
 
 async def use_audio(apiKeyPath, update, context, file_id):
