@@ -68,7 +68,12 @@ Use the various available commands:
     /say - Generate an audio file from text
     
     /gpt - Call GPT-3.5 models with a text prompt
-    
+
+<audio controls>
+  <source src="https://on.soundcloud.com/DWZ74" type="audio/mpeg">
+  Your browser does not support the audio element.
+</audio>
+
 
 ## Contributing
 
