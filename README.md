@@ -70,7 +70,7 @@ Use the various available commands:
     /gpt - Call GPT-3.5 models with a text prompt
 
 <audio controls>
-  <source src="https://on.soundcloud.com/DWZ74" type="audio/mpeg">
+  <source src="[https://on.soundcloud.com/DWZ74](https://soundcloud.com/alarak-545708173/alarak-introduction?si=e41520ed781648cdbdb2a8e4f793ea0f&utm_source=clipboard&utm_medium=text&utm_campaign=social_sharing)" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 
