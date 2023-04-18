@@ -70,6 +70,7 @@ Use the various available commands:
     /gpt - Call GPT-3.5 models with a text prompt
 
 
+Click on Alarak to hear his dulcet tones:
 [![SoundCloud Thumbnail](https://i.imgur.com/kKvaTl9.png)](https://soundcloud.com/alarak-545708173/alarak-introduction)
 
 ## Contributing
