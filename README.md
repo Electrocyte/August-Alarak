@@ -25,7 +25,7 @@ August Alarak is a versatile Telegram bot designed to transcribe audio to text, 
 1. Clone this repository:
 
 ```bash
-git clone https://github.com/yourusername/AugustAlarak.git
+git clone https://github.com/Electrocyte/AugustAlarak.git
 pip install pipenv
 
 cd AugustAlarak
