@@ -69,6 +69,12 @@ Use the various available commands:
     
     /gpt - Call GPT-3.5 models with a text prompt
     
+<audio controls>
+  <source src="https://github.com/Electrocyte/August-Alarak/blob/main/Alarak%20Introduction.mp3" type="audio/mpeg">
+  Your browser does not support the audio element.
+</audio>
+
+
 
 ## Contributing
 
