@@ -69,11 +69,8 @@ Use the various available commands:
     
     /gpt - Call GPT-3.5 models with a text prompt
 
-<audio controls>
-  <source src="[https://on.soundcloud.com/DWZ74](https://soundcloud.com/alarak-545708173/alarak-introduction?si=e41520ed781648cdbdb2a8e4f793ea0f&utm_source=clipboard&utm_medium=text&utm_campaign=social_sharing)" type="audio/mpeg">
-  Your browser does not support the audio element.
-</audio>
 
+<iframe width="100%" height="300" scrolling="no" frameborder="no" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/1495280575&color=%2300ff2f&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true"></iframe>
 
 ## Contributing
 
