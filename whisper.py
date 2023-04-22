@@ -46,7 +46,7 @@ def chunk_audio(file_to_check: str, format: str, save_loc: str) -> List:
     audio_file = AudioSegment.from_file(file_to_check, format=format)
 
     # Split the audio into 30-minute chunks
-    chunk_length_ms = 30 * 60 * 1000
+    chunk_length_ms = 15 * 60 * 1000
     chunks = list(range(0, len(audio_file), chunk_length_ms))
 
     # Create a directory to save the chunks
@@ -85,7 +85,8 @@ def check_file_size(file_to_check: str, save_loc: str) -> Union[List, None]:
 
 
 def T_or_T(t_audio_file, prompt, save_loc, save, _type_) -> Dict:
-    if _type_ == 'transcript':
+    print(_type_, prompt)
+    if 'transcript' in _type_:
         t_ = transcript(t_audio_file, prompt)
     elif _type_ == 'translated-transcript':
         t_ = translate(t_audio_file, prompt)
@@ -138,16 +139,17 @@ def main():
         # print(f"Transcript: {transcript_}")
         # save_out(transcript_, save_loc, f"transcript-{save}")
 
-    if os.path.isfile(translate_audio_file) and not None:
-        # fix issue with overly large files.
-        chunk_files = check_file_size(translate_audio_file, save_loc)
+    if translate_audio_file is not None:
+        if os.path.isfile(translate_audio_file) and not None:
+            # fix issue with overly large files.
+            chunk_files = check_file_size(translate_audio_file, save_loc)
 
-        if chunk_files is not None:
-            for n, cf in enumerate(chunk_files):
-                T_or_T(cf, prompt, save_loc, save, f"translated-transcript-{n}")
+            if chunk_files is not None:
+                for n, cf in enumerate(chunk_files):
+                    T_or_T(cf, prompt, save_loc, save, f"translated-transcript-{n}")
 
-        else:
-             T_or_T(translate_audio_file, prompt, save_loc, save, "translated-transcript")
+            else:
+                T_or_T(translate_audio_file, prompt, save_loc, save, "translated-transcript")
 
         # translated_transcript = translate(translate_audio_file, prompt)
         # print(f"Translated transcript: {translated_transcript}")

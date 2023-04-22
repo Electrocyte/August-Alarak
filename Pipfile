@@ -9,6 +9,15 @@ pydub = "*"
 requests = "*"
 python-telegram-bot = "*"
 dataclasses-json = "*"
+pyaudioanalysis = "*"
+numpy = "*"
+scipy = "*"
+eyed3 = "*"
+matplotlib = "*"
+hmmlearn = "*"
+imblearn = "*"
+plotly = "*"
+scikit-learn = "==0.24.2"
 
 [dev-packages]
 
