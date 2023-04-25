@@ -60,7 +60,7 @@ def get_subtracks(segments: List[Tuple[int, int, int]], output_audio: str) -> Li
     return subtracks
 
 
-directory = "Recordings/2023-04-15 Fall of Arenor/chunks/"
+directory = "chunks/"
 number_of_speakers = 4
 
 input_audio = os.path.join(directory, "chunk_0.mp3")
