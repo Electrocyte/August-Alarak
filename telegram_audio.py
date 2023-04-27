@@ -134,6 +134,7 @@ async def english_to_malay(allow_uID: List[int], update: Update, context: Contex
     await reply_to_text(update, context, prompt)
 
 
+# when running translate on a message, automatically translate to english
 async def use_audio(apiKeyPath, update, context, file_id):
     file = await context.bot.get_file(file_id)
 
