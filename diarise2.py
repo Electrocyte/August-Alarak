@@ -135,12 +135,15 @@ except:
 
 audio_loc = f"{directory}{audioWav}"
 
+transcript_out = whisper.transcript(audio_loc)
+
 match = re.search(pattern, audioWav)
 number = "0"
 if match:
     number = str(match.group(1))
 extension = audioWav.split(".")[-1]
 new_name = audioWav.replace(extension, "wav")
+whisper.save_out(transcript_out, f"{directory}/{number}", f"total-chunk")
 output_file = f"{directory}/{number}/{new_name}"
 
 # file name and convert to wav if necessary
