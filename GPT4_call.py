@@ -48,21 +48,3 @@ if __name__ == '__main__':
 
     res = process_message(json_text, prompt)
     print(res)
-
-
-# Traceback (most recent call last):
-#   File "/home/james/whisper/./GPT4_call.py", line 46, in <module>
-#     res = process_message(json_text, prompt)
-#   File "/home/james/whisper/./GPT4_call.py", line 18, in process_message
-#     data = chatbot.ask(f"{prompt} {text}")
-#   File "/home/james/.local/share/virtualenvs/whisper-MYUEtSTx/lib/python3.10/site-packages/revChatGPT/V3.py", line 337, in ask
-#     full_response: str = "".join(response)
-#   File "/home/james/.local/share/virtualenvs/whisper-MYUEtSTx/lib/python3.10/site-packages/revChatGPT/V3.py", line 203, in ask_stream
-#     raise t.APIConnectionError(
-# revChatGPT.typings.APIConnectionError: 401 Unauthorized {
-#     "error": {
-#         "message": "",
-#         "type": "invalid_request_error",
-#         "param": null,
-#         "code": "invalid_api_key"
-#     }
