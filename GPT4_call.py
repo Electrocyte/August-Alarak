@@ -1,4 +1,6 @@
-from revChatGPT.V3 import Chatbot
+from os import environ
+environ['CHATGPT_BASE_URL'] = "https://bypass.churchless.tech/"
+from revChatGPT.V1 import Chatbot
 import argparse
 import json
 
@@ -14,7 +16,7 @@ def process_message(text: str, prompt: str) -> str:
         "access_token": ACCESS_TOKEN,
         # "api_key ": ACCESS_TOKEN,
         "model": "gpt-4",
-        "temperature": 0.5,
+        # "temperature": 0.5,
     }
 
     chatbot = Chatbot(access)
@@ -28,18 +30,18 @@ def process_message(text: str, prompt: str) -> str:
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='GPT-4.')
 
-    parser.add_argument('-a', '--apiKeyPath', help='Location of api key.')
+    parser.add_argument('-a', '--accessToken', help='Location of api key.')
     parser.add_argument('-t', '--text', help='Input text.')
     parser.add_argument('-p', '--prompt', help='Prompt.')
 
     args = parser.parse_args()
 
-    apiKeyPath = args.apiKeyPath
+    accessToken = args.accessToken
     text = args.text
     prompt = args.prompt
 
     try:
-        ACCESS_TOKEN = read_api_key(f"{apiKeyPath}/gpt4_api")
+        ACCESS_TOKEN = read_api_key(f"{accessToken}/gpt4_api")
     except:
         ACCESS_TOKEN = read_api_key()
 
