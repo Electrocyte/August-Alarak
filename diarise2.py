@@ -109,6 +109,12 @@ def gen_wav(audioWav: str, audio_loc: str, output_file: str) -> str:
     return fname
 
 
+def audio_length_gt_threshold(file_path, threshold=0.1):
+    audio = AudioSegment.from_file(file_path)
+    duration = audio.duration_seconds
+    return duration > threshold
+
+
 parser = argparse.ArgumentParser(description='Save telegram audio.')
 
 parser.add_argument('-d', '--directory', help='Audio file location.')
@@ -200,8 +206,26 @@ for idx, speaker_info in enumerate(speaker_in_order):
 
     speaker_transcript_chunk = f"{directory}/{number}/transcripts/"
     os.makedirs(speaker_transcript_chunk, exist_ok=True)
-    transcript_out = whisper.transcript(output_filename)
-    whisper.save_out(transcript_out, speaker_transcript_chunk, f"{idx}-chunk")
+
+    if audio_length_gt_threshold(output_filename):
+        transcript_out = whisper.transcript(output_filename)
+
+        # Create a new dictionary
+        new_transcript_out = {}
+
+        # Copy over the key-value pairs, excluding the "text" key
+        for key, value in transcript_out.items():
+            if key != "text":
+                new_transcript_out[key] = value
+
+        # Add the new key with the same value as the "text" key
+        new_transcript_out[speaker] = transcript_out["text"]
+
+        transcript_out = new_transcript_out
+
+        whisper.save_out(transcript_out, speaker_transcript_chunk, f"{idx}-chunk")
+    else:
+        print(f"Audio file '{output_filename}' is not longer than 0.1 seconds.")
 
 
 # # Order of execution

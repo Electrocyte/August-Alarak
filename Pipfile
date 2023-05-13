@@ -20,6 +20,7 @@ plotly = "*"
 scikit-learn = "==0.24.2"
 "pyannote.audio" = "*"
 torchvision = "*"
+revchatgpt = "*"
 
 [dev-packages]
 
