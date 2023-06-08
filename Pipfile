@@ -21,6 +21,8 @@ scikit-learn = "==0.24.2"
 "pyannote.audio" = "*"
 torchvision = "*"
 revchatgpt = "*"
+ebooklib = "*"
+pymupdf = "*"
 
 [dev-packages]
 

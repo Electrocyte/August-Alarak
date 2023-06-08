@@ -2,6 +2,8 @@ import json
 import glob
 import os
 
+# build a script from the transcripts (requires initial diarisation)
+
 def count_integer_folders(path: str) -> int:
     # List all items in the directory
     items = os.listdir(path)
@@ -25,7 +27,8 @@ def format_conversation_for_summarization(conversation):
     return formatted_text.strip()
 
 
-directory = "/mnt/d/Dropbox/Temasek/Ataraxia Ascension Plate/Recordings/2023-04-15 Fall of Arenor/chunks/"
+# directory = "/mnt/d/Dropbox/Temasek/Ataraxia Ascension Plate/Recordings/2023-04-15 Fall of Arenor/chunks/"
+directory = "/mnt/d/Dropbox/Temasek/Ataraxia Ascension Plate/Recordings/2023-05-20 Misty End/chunks/"
 
 # count number of folders in directory that are also int
 integer_folder_count = count_integer_folders(directory)
