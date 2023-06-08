@@ -109,9 +109,13 @@ for item in document_items:
         # print(n, count, nn)
 
         # If we've collected 10 elements, process them
-        if rolling_totals > 4500 and rolling_totals < 5500:
+        if rolling_totals > 3500 and rolling_totals < 4500:
             nn += 1
             LoD, text = process_text(blocks)
+
+            initial_file = f'{folder}/{savename}-epubfragment-{nn}.json'
+            with open(initial_file, 'w') as g:
+                json.dump(LoD, g)
 
             save_file = f'{folder}/{savename}-GPT-4-{nn}.json'
             print(f"Saving to: {save_file} - Character count: {text}")
@@ -123,7 +127,7 @@ for item in document_items:
 
                 # the_reply1 = GPT_reply1['choices'][0]['message']['content']
                 # # print("the_reply: ", the_reply)  # check what's inside the_reply
-            print(LoD)
+
             ## GPT-4
             if not os.path.exists(save_file):
                 the_reply1 = GPT4_call.process_message(LoD, prompt, ACCESS_TOKEN)
@@ -143,7 +147,7 @@ for item in document_items:
 
         # need to account for an instance of over shoot !!!!!!!!!!!!!
         # i.e. when rolling_totals > 8000
-        elif rolling_totals >= 5500 and rolling_totals < 8000:
+        elif rolling_totals >= 4500 and rolling_totals < 8000:
             LoD = process_text(blocks)
             print(f"Too many characters, terminating.")
             break
@@ -167,7 +171,11 @@ files = glob.glob(f'{folder}/{savename}-GPT-4-*.json')
 
 parts = []
 for file in files:
-    with open(file, 'r', encoding='utf-8') as f:
+    number = file.split(".")[0].split("-")[-1]
+    ori_json = f'{folder}/{savename}-epubfragment-{number}.json'
+    with open(file, 'r', encoding='utf-8') as f, open(ori_json, 'r') as g:
+        ori = json.loads(g.read())
+
         data = json.load(f)
         for i in data:
 
@@ -188,9 +196,17 @@ for file in files:
             # # parse the JSON string into Python list of dictionaries
             try:
                 lst = json.loads(s)
+                print(f"\n{len(ori)}")
+                print(len(lst))
+
+                for r in range(len(ori)):
+                    print(f"\n{ori[r]}")
+                    print(f"{lst[r]}\n")
+
                 parts.append(lst)
             except:
                 print("Broken string, thanks GPT-4")
+    break
 
 
 
