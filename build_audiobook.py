@@ -77,7 +77,7 @@ openai.api_key = api_key
 book = epub.read_epub(target_book)
 
 # prompt = """Rewrite the following text into a list of dictionaries with the key 'Speaker' and value is always the speech, where 'Speaker' is the name of the speaker or narrator if no speaker is specified, and the value is any speech or narrated text. Replace stylized quotes in 'Speech' with regular quotes and mark the speaker as 'unknown' if not known. The text to be rewritten is: """
-prompt = "Given the following spoken passages, please assign a speaker name for the ones marked as 'unknown'. Use context clues from the given speeches to determine the most likely speaker for the ones marked as 'unknown'. Replace 'unknown' with the correct speaker. The conversation is as follows, Alarak is the narrator, not a character:"
+prompt = "Given the following spoken passages, please assign a speaker name for the ones marked as 'unknown'. If Alarak is a 'Speaker', output an empty dictionary. Use context clues from the given speeches to determine the most likely speaker for the ones marked as 'unknown'. Replace 'unknown' with the correct speaker. The conversation is as follows, Alarak is the narrator, not a character:"
 
 # Get a list of items of type ITEM_DOCUMENT
 document_items = list(book.get_items_of_type(ebooklib.ITEM_DOCUMENT))
@@ -178,8 +178,8 @@ for file in files:
 
         data = json.load(f)
         for i in data:
-
             result = re.sub(r"^.*:\s*\n", "", i, flags=re.MULTILINE)
+            result = re.sub(r"\n\w.*?$", "", result, flags=re.MULTILINE)
             # remove newlines
             s = re.sub(r'\n', '', result)
 
@@ -193,6 +193,8 @@ for file in files:
 
             s = s.replace('---', "'")
 
+            # print("\n",s)
+
             # # parse the JSON string into Python list of dictionaries
             try:
                 lst = json.loads(s)
@@ -205,7 +207,7 @@ for file in files:
 
                 parts.append(lst)
             except:
-                print("Broken string, thanks GPT-4")
+                print(f"Broken string, thanks GPT-4")
     break
 
 
