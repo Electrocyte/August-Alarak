@@ -41,7 +41,7 @@ def process_text(blocks) -> Tuple[List, int]:
     # Use json.dumps to convert to a JSON formatted string
     json_string = json.dumps(LoD, indent=4)
 
-    # # Print the result
+    # Print the result
     # print(json_string)
 
     return LoD, len(text)
@@ -54,12 +54,15 @@ def replacer(match):
 
 def clean_up(i):
     result = re.sub(r"^.*:\s*\n", "", i, flags=re.MULTILINE)
+    # print(result)
     result = re.sub(r'```python\nList1 = ', '', result)
+    # print(result)
+    result = re.sub(r'List1 = ', '', result)
     result = re.sub(r"\n\w.*?$", "", result, flags=re.MULTILINE)
-
+    # print(result)
     # remove newlines
     s = re.sub(r'\n', '', result)
-
+    # print(s)
     # replace single quotes with double quotes to make it valid JSON
     s = re.sub(r"(\w)(\')(\w)", r"\1---\3", s)
     s = re.sub(r"(\")(\')", r"\1---", s)
@@ -72,11 +75,17 @@ def clean_up(i):
     s = s.replace('"...,', '"},')
     s = re.sub(r'\w$', '"}]', s)
     s = re.sub(r'^\w.*\[', '[', s)
+    # print(s)
     s = re.sub(r'\`\`\`python    ', '[', s)
     s = re.sub(r'\`\`\`', '', s)
     s = re.sub(r'\–$', '"}]', s)
 
     s = re.sub(r'^\s*\{"', '[{"', s)
+    # s = re.sub(r'(?<=\]\s)[\s\S]*', '[', s)
+    # print(s)
+    s = re.sub(r'^python', '', s)
+    s = re.sub(r'\},\s*$', '}]', s)
+    s = re.sub(r'\}$', '}]', s)
 
     return s
 
@@ -146,6 +155,7 @@ Epub = args.Epub
 target_book = f"{folder}/{Epub}"
 
 try:
+    # ACCESS_TOKEN = GPT4_call.read_api_key(f"{apiKeyPath}/gpt4_api2")
     ACCESS_TOKEN = GPT4_call.read_api_key(f"{apiKeyPath}/gpt4_api")
 except:
     ACCESS_TOKEN = GPT4_call.read_api_key()
@@ -201,7 +211,8 @@ for item in document_items:
         rolling_totals += rolling_total
 
         # If we've collected 10 elements, process them
-        if rolling_totals > 5000 and rolling_totals < 5500:
+        if rolling_totals > 5000 and rolling_totals < 6000:
+            print(f"Rolling total: {rolling_totals}")
             nn += 1
             LoD, text = process_text(blocks)
 
@@ -226,7 +237,6 @@ for item in document_items:
 
             pre_save_file = f'{folder}/{savename}-GPT-4-pre-{nn}.json'
             post_save_file = f'{folder}/{savename}-GPT-4-post-{nn}.json'
-            # print(f"Saving to: {save_file} - Character count: {text}")
 
             ## GPT-3.5 - sadly you are just too stupid to do this important task :(
             # if not os.path.exists(save_file):
@@ -239,14 +249,14 @@ for item in document_items:
             ## GPT-4
             if not os.path.exists(pre_save_file):
                 the_reply1 = GPT4_call.process_message(pp1, preprompt, ACCESS_TOKEN)
-
+                print(the_reply1, len(the_reply1))
                 with open(pre_save_file, 'w') as f:
                     json.dump([the_reply1], f)
 
             ## GPT-4
             if not os.path.exists(post_save_file):
                 the_reply2 = GPT4_call.process_message(pp2, postprompt, ACCESS_TOKEN)
-
+                print(the_reply2, len(the_reply2))
                 with open(post_save_file, 'w') as f:
                     json.dump([the_reply2], f)
 
@@ -254,16 +264,16 @@ for item in document_items:
             blocks = []
             count = 0
             rolling_totals = 0
-            # break
+            break
             # if "3.json" in pre_save_file:
             #     break
 
 
         # need to account for an instance of over shoot !!!!!!!!!!!!!
         # i.e. when rolling_totals > 8000
-        elif rolling_totals >= 5500 and rolling_totals < 8000:
+        elif rolling_totals >= 6000 and rolling_totals < 8000:
             LoD = process_text(blocks)
-            print(f"Too many characters, terminating.")
+            print(f"Too many characters ({rolling_totals}), terminating.")
             break
 
         else:
@@ -282,30 +292,38 @@ for file in files:
     print(number)
     ori_json = f'{folder}/{savename}-epubfragment-{number}.json'
     postfile = file.replace("pre", "post")
-    with open(file, 'r', encoding='utf-8') as f, open(ori_json, 'r') as g, open(postfile, 'r', encoding='utf-8') as h:
 
-        ori = json.loads(g.read())
-        predata = json.load(f)
-        postdata = json.load(h)
+    if os.path.exists(file) and os.path.exists(postfile):
+        with open(file, 'r', encoding='utf-8') as f, open(ori_json, 'r') as g, open(postfile, 'r', encoding='utf-8') as h:
 
-        for i in range(len(predata)):
+            ori = json.loads(g.read())
+            predata = json.load(f)
+            postdata = json.load(h)
 
-            pre_s = clean_up(predata[i])
-            post_s = clean_up(postdata[i])
+            for i in range(len(predata)):
 
-            # # parse the JSON string into Python list of dictionaries
-            pre_part = check_original(pre_s, ori, "before")
-            post_part = check_original(post_s, ori, "after")
+                pre_s = clean_up(predata[i])
+                post_s = clean_up(postdata[i])
 
-            if pre_part is None:
-                failed_files.append(f"\n{file} \n{pre_part}")
-                if post_part is None:
-                    failed_files.append(f"\n{postfile} \n{post_part}")
-            else:
-                cleaned_json = f'{folder}/{savename}-ready-for-audio-{number}.json'
-                print(cleaned_json)
-                with open(cleaned_json, 'w') as k:
-                    json.dump(pre_part + post_part, k)
+                index = next(i for i, d in enumerate(ori) if d["Speaker"] == "$$$")
+                # print(f"\n{predata} \n\n{pre_s}\n")
+                # print(f"{ori[:index]}")
+                # print(f"\n{postdata} \n\n{post_s}\n")
+                # print(f"{ori[index:]}")
+
+                # # parse the JSON string into Python list of dictionaries
+                pre_part = check_original(pre_s, ori, "before")
+                post_part = check_original(post_s, ori, "after")
+
+                if pre_part is None:
+                    failed_files.append(f"\n{file} \n{pre_part}")
+                    if post_part is None:
+                        failed_files.append(f"\n{postfile} \n{post_part}")
+                else:
+                    cleaned_json = f'{folder}/{savename}-ready-for-audio-{number}.json'
+                    print(cleaned_json)
+                    with open(cleaned_json, 'w') as k:
+                        json.dump(pre_part + post_part, k)
 
 failed_json = f'{folder}/{savename}-double-check-errors.json'
 print(failed_json)
