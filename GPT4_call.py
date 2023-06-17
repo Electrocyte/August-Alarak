@@ -1,10 +1,13 @@
-from os import environ
-environ['CHATGPT_BASE_URL'] = "https://bypass.churchless.tech/"
-from revChatGPT.V1 import Chatbot
+# from os import environ
+# environ['CHATGPT_BASE_URL'] = "https://bypass.churchless.tech/"
+# from revChatGPT.V1 import Chatbot
 import argparse
 import json
+import call_GPT
 import glob
 import os
+import openai
+import whisper
 
 
 def read_api_key(file_path: str = "gpt4_api") -> str:
@@ -12,21 +15,21 @@ def read_api_key(file_path: str = "gpt4_api") -> str:
         return f.read().strip()
 
 
-def process_message(text: str, prompt: str, ACCESS_TOKEN: str) -> str:
+# def process_message(text: str, prompt: str, ACCESS_TOKEN: str) -> str:
 
-    access = {
-        "access_token": ACCESS_TOKEN,
-        # "api_key ": ACCESS_TOKEN,
-        "model": "gpt-4",
-        # "temperature": 0.5,
-    }
+#     access = {
+#         "access_token": ACCESS_TOKEN,
+#         # "api_key ": ACCESS_TOKEN,
+#         "model": "gpt-4",
+#         # "temperature": 0.5,
+#     }
 
-    chatbot = Chatbot(access)
-    data = chatbot.ask(f"{prompt} {text}")
-    res = ""
-    for i in data:
-        res = i["message"]
-    return res
+#     chatbot = Chatbot(access)
+#     data = chatbot.ask(f"{prompt} {text}")
+#     res = ""
+#     for i in data:
+#         res = i["message"]
+#     return res
 
 
 if __name__ == '__main__':
@@ -45,9 +48,22 @@ if __name__ == '__main__':
     # prompt = args.prompt
 
     try:
+        # ACCESS_TOKEN = GPT4_call.read_api_key(f"{apiKeyPath}/gpt4_api2")
         ACCESS_TOKEN = read_api_key(f"{accessToken}/gpt4_api")
     except:
         ACCESS_TOKEN = read_api_key()
+
+    try:
+        api_key = whisper.read_api_key(f"{accessToken}/api_key")
+    except:
+        api_key = whisper.read_api_key()
+
+    openai.api_key = api_key
+
+    # try:
+    #     ACCESS_TOKEN = read_api_key(f"{accessToken}/gpt4_api")
+    # except:
+    #     ACCESS_TOKEN = read_api_key()
 
     json_globs = glob.glob(text)
     print(json_globs, "\n")
@@ -88,38 +104,65 @@ if __name__ == '__main__':
         save_bullets = f"{clean_out}/clean-summary-{i}.json"
 
         if not os.path.exists(save_flow):
-            pol_res = process_message(list_of_text, prompt_polish, ACCESS_TOKEN)
-            with open(save_flow, 'w', encoding='utf-8') as f:
+            GPT_reply1 = call_GPT.direct_contact_GPT4(list_of_text, prompt_polish)
+            pol_res = GPT_reply1['choices'][0]['message']['content']
+            with open(save_flow, 'w') as f:
                 json.dump(pol_res, f)
         else:
             with open(save_flow, 'r', encoding='utf-8') as f:
                 pol_res = json.load(f)
 
+        # if not os.path.exists(save_flow):
+        #     pol_res = process_message(list_of_text, prompt_polish, ACCESS_TOKEN)
+        #     with open(save_flow, 'w', encoding='utf-8') as f:
+        #         json.dump(pol_res, f)
+        # else:
+        #     with open(save_flow, 'r', encoding='utf-8') as f:
+        #         pol_res = json.load(f)
+
         print("Polish result: ", pol_res)
 
         if not os.path.exists(save_spelling):
-            spe_res = process_message(pol_res, prompt_spelling, ACCESS_TOKEN)
-            with open(save_spelling, 'w', encoding='utf-8') as f:
+            GPT_reply1 = call_GPT.direct_contact_GPT4(pol_res, prompt_spelling)
+            spe_res = GPT_reply1['choices'][0]['message']['content']
+            with open(save_spelling, 'w') as f:
                 json.dump(spe_res, f)
         else:
             with open(save_spelling, 'r', encoding='utf-8') as f:
                 spe_res = json.load(f)
 
+        # if not os.path.exists(save_spelling):
+        #     spe_res = process_message(pol_res, prompt_spelling, ACCESS_TOKEN)
+        #     with open(save_spelling, 'w', encoding='utf-8') as f:
+        #         json.dump(spe_res, f)
+        # else:
+        #     with open(save_spelling, 'r', encoding='utf-8') as f:
+        #         spe_res = json.load(f)
+
         print("Spelling result: ", spe_res)
 
         if not os.path.exists(save_bullets):
-            bul_res = process_message(spe_res, prompt_bullets, ACCESS_TOKEN)
-            with open(save_bullets, 'w', encoding='utf-8') as f:
+            GPT_reply1 = call_GPT.direct_contact_GPT4(spe_res, prompt_bullets)
+            bul_res = GPT_reply1['choices'][0]['message']['content']
+            with open(save_bullets, 'w') as f:
                 json.dump(bul_res, f)
         else:
             with open(save_bullets, 'r', encoding='utf-8') as f:
                 bul_res = json.load(f)
 
+        # if not os.path.exists(save_bullets):
+        #     bul_res = process_message(spe_res, prompt_bullets, ACCESS_TOKEN)
+        #     with open(save_bullets, 'w', encoding='utf-8') as f:
+        #         json.dump(bul_res, f)
+        # else:
+        #     with open(save_bullets, 'r', encoding='utf-8') as f:
+        #         bul_res = json.load(f)
+
         print("Bullets result: ", bul_res)
 
 
     final_bullets = f"{clean_out}/final-summary-take.json"
-    prompt_final = "Now convert this into the most salient 25 bullet points."
+    prompt_final = "Take these bullet points from a dungeons and dragons game and pick the 25 bullet points that make the best story."
     clean_json_globs = glob.glob(f"{clean_out}/*summary*.json")
     print(clean_json_globs, "\n")
 
@@ -138,10 +181,20 @@ if __name__ == '__main__':
         split_parts = [parts[0][i:i+chunk_size] for i in range(0, len(parts[0]), chunk_size)]
     print(split_parts)
 
+    print(f"\n{final_bullets}")
     if not os.path.exists(final_bullets):
-        save_parts = process_message(split_parts, prompt_final, ACCESS_TOKEN)
-        with open(final_bullets, 'w', encoding='utf-8') as f:
+        GPT_reply1 = call_GPT.direct_contact_GPT4(split_parts, prompt_final)
+        save_parts = GPT_reply1['choices'][0]['message']['content']
+        with open(final_bullets, 'w') as f:
             json.dump(save_parts, f)
     else:
         with open(final_bullets, 'r', encoding='utf-8') as f:
             save_parts = json.load(f)
+
+    # if not os.path.exists(final_bullets):
+    #     save_parts = process_message(split_parts, prompt_final, ACCESS_TOKEN)
+    #     with open(final_bullets, 'w', encoding='utf-8') as f:
+    #         json.dump(save_parts, f)
+    # else:
+    #     with open(final_bullets, 'r', encoding='utf-8') as f:
+    #         save_parts = json.load(f)

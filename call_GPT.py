@@ -53,6 +53,27 @@ def direct_contact_GPT(text: str, prompt: str = "Minimise any other prose. Reply
     return reply
 
 
+def direct_contact_GPT4(text: str, prompt: str = "Minimise any other prose. Reply in the style of a knowledgable expert where appropriate.") -> Dict:
+    full_prompt = f"{prompt} {text}"
+    print(f"{full_prompt}\n")
+
+    reply = openai.ChatCompletion.create(
+        # model="gpt-4",
+        # model="gpt-4-0314",
+        model="gpt-4-0613",
+        # model="gpt-4-32k",
+        # model="gpt-4-32k-0613",
+        # id = "chatcmpl-6z2Dbtif3GwjTkGNkepXWKsRPGB1Q",
+        messages = [
+                {"role": "system", "content": "You are High Lord Alarak. Your are a helpful cowriter."},
+                {"role": "user", "content": full_prompt},
+                # {"role": "assistant", "content": "The Los Angeles Dodgers won the World Series in 2020."},
+                # {"role": "user", "content": "Where was it played?"}
+            ]
+        )
+    return reply
+
+
 def save_out(response: Dict, save_loc: str, _type_: str) -> None:
     the_reply = response['choices'][0]['message']['content']
     model = response['model']

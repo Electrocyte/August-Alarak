@@ -82,11 +82,12 @@ def clean_up(i):
 
     s = re.sub(r'^\s*\{"', '[{"', s)
     # s = re.sub(r'(?<=\]\s)[\s\S]*', '[', s)
-    # print(s)
+
     s = re.sub(r'^python', '', s)
     s = re.sub(r'\},\s*$', '}]', s)
     s = re.sub(r'\}$', '}]', s)
-
+    s = re.sub(r'\.$', '"}]', s)
+    # print(s)
     return s
 
 
@@ -229,7 +230,8 @@ for item in document_items:
             p2 = LoD[e:]
 
             pp1 = f"List1, provide speakers for this: {p1}, List2, only use this for context: {p2}"
-            pp2 = f"List1, only use this for context: {p1}, List2, provide speakers for this: {p2}"
+            pp2 = f"List2, provide speakers for this: {p2}, List1, only use this for context: {p1}"
+            # pp2 = f"List1, only use this for context: {p1}, List2, provide speakers for this: {p2}"
 
             initial_file = f'{folder}/{savename}-epubfragment-{nn}.json'
             with open(initial_file, 'w') as g:
@@ -238,35 +240,42 @@ for item in document_items:
             pre_save_file = f'{folder}/{savename}-GPT-4-pre-{nn}.json'
             post_save_file = f'{folder}/{savename}-GPT-4-post-{nn}.json'
 
-            ## GPT-3.5 - sadly you are just too stupid to do this important task :(
-            # if not os.path.exists(save_file):
-                # GPT_reply1 = call_GPT.direct_contact_GPT(LoD, prompt)
-                # # print("GPT_reply: ", GPT_reply)  # check what's inside GPT_reply
-
-                # the_reply1 = GPT_reply1['choices'][0]['message']['content']
-                # # print("the_reply: ", the_reply)  # check what's inside the_reply
-
-            ## GPT-4
+            ## GPT-4 - API - might give more determinate replies
             if not os.path.exists(pre_save_file):
-                the_reply1 = GPT4_call.process_message(pp1, preprompt, ACCESS_TOKEN)
-                print(the_reply1, len(the_reply1))
+                GPT_reply1 = call_GPT.direct_contact_GPT4(pp1, preprompt)
+                the_reply1 = GPT_reply1['choices'][0]['message']['content']
                 with open(pre_save_file, 'w') as f:
                     json.dump([the_reply1], f)
 
-            ## GPT-4
             if not os.path.exists(post_save_file):
-                the_reply2 = GPT4_call.process_message(pp2, postprompt, ACCESS_TOKEN)
-                print(the_reply2, len(the_reply2))
+                GPT_reply2 = call_GPT.direct_contact_GPT4(pp2, postprompt)
+                the_reply2 = GPT_reply2['choices'][0]['message']['content']
                 with open(post_save_file, 'w') as f:
                     json.dump([the_reply2], f)
+            ##############################
+
+            # ## GPT-4 - no API - replies are always highly indeterminate
+            # if not os.path.exists(pre_save_file):
+            #     the_reply1 = GPT4_call.process_message(pp1, preprompt, ACCESS_TOKEN)
+            #     print(the_reply1, len(the_reply1))
+            #     with open(pre_save_file, 'w') as f:
+            #         json.dump([the_reply1], f)
+
+            # ## GPT-4
+            # if not os.path.exists(post_save_file):
+            #     the_reply2 = GPT4_call.process_message(pp2, postprompt, ACCESS_TOKEN)
+            #     print(the_reply2, len(the_reply2))
+            #     with open(post_save_file, 'w') as f:
+            #         json.dump([the_reply2], f)
+            # ##############################
 
             # Reset blocks and counter for the next batch
             blocks = []
             count = 0
             rolling_totals = 0
-            break
-            # if "3.json" in pre_save_file:
-            #     break
+            # break
+            if "12.json" in pre_save_file:
+                break
 
 
         # need to account for an instance of over shoot !!!!!!!!!!!!!

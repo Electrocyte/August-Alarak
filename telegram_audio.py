@@ -70,6 +70,35 @@ async def reply_to_text(update, context, prompt: str = ""):
         await update.message.reply_text(the_reply)
 
 
+async def reply_to_text4(update, context, prompt: str = ""):
+    text = ""
+    # /gpt4 as reply to another message
+    if update.message.reply_to_message is not None:
+        prompt_text = " ".join(context.args)
+        original_message = update.message.reply_to_message
+        if original_message.text is None:
+            await update.message.reply_text("I cannot possibly say that!")
+            return
+        text = original_message.text
+        if len(prompt_text) > 0:
+            text = f"{prompt_text}. {text}"
+    # /gpt4 <TYPE TEXT>
+    else:
+        text = " ".join(context.args)
+
+    text = text.strip()
+
+    if len(text) == 0:
+        await update.message.reply_text(f"Even chat-GPT can't help you with the void!")
+    else:
+        if prompt is None or prompt == "":
+            GPT_reply = call_GPT.direct_contact_GPT4(text)
+        else:
+            GPT_reply = call_GPT.direct_contact_GPT4(text, prompt)
+        the_reply = GPT_reply['choices'][0]['message']['content']
+        await update.message.reply_text(the_reply)
+
+
 async def voice_handler(allow_uID: List[int], botKeyPath: str, save_loc: str, prompt: str, save: str, \
                         update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     print(f"Received message: {update.effective_user.id}, {update.message.chat_id}")
@@ -196,6 +225,13 @@ async def gpt(allow_uID: List[int], update: Update, context: ContextTypes.DEFAUL
     text = await reply_to_text(update, context)
 
 
+async def gpt4(allow_uID: List[int], update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not check_uID(update, allow_uID):
+        return
+
+    text = await reply_to_text4(update, context)
+
+
 # The goal is to have this function called every time the Bot receives a Telegram message that contains the /start command.
 async def say(allow_uID: List[int], apiKeyPath, out_loc, update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not check_uID(update, allow_uID):
@@ -289,6 +325,9 @@ def main():
     gpt_part_func = partial(gpt, allowed_userID)
     gpt_handler = CommandHandler('gpt', gpt_part_func)
 
+    gpt4_part_func = partial(gpt4, allowed_userID)
+    gpt4_handler = CommandHandler('gpt4', gpt4_part_func)
+
     part_func = partial(voice_handler, allowed_userID, botKeyPath, save_loc, prompt, save)
     voice_msg_handler = MessageHandler(filters.VOICE | filters.AUDIO, part_func)
 
@@ -303,7 +342,7 @@ def main():
     application.add_handler(e2c_handler)
     application.add_handler(e2m_handler)
     application.add_handler(gpt_handler)
-
+    application.add_handler(gpt4_handler)
 
     application.run_polling()
 
