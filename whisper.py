@@ -64,6 +64,14 @@ def chunk_audio(file_to_check: str, format: str, save_loc: str) -> List:
     return chunk_files
 
 
+def convert_ogg_to_mp3(file_to_check: str) -> str:
+    new_file = file_to_check.replace("ogg", "mp3")
+    audio = AudioSegment.from_ogg(file_to_check)
+    audio.export(new_file, format="mp3")
+    print(f"Changing format to mp3: {new_file}.\n")
+    return new_file
+
+
 def check_file_size(file_to_check: str, save_loc: str) -> Union[List, None]:
     print(file_to_check)
     if os.stat(file_to_check).st_size > 0:
@@ -126,6 +134,9 @@ def main():
 
     if os.path.isfile(transcribe_audio_file) and not None:
         # fix issue with overly large files.
+
+        if "ogg" in transcribe_audio_file:
+            transcribe_audio_file = convert_ogg_to_mp3(transcribe_audio_file)
         chunk_files = check_file_size(transcribe_audio_file, save_loc)
 
         if chunk_files is not None:
@@ -142,6 +153,8 @@ def main():
     if translate_audio_file is not None:
         if os.path.isfile(translate_audio_file) and not None:
             # fix issue with overly large files.
+            if "ogg" in translate_audio_file:
+                translate_audio_file = convert_ogg_to_mp3(translate_audio_file)
             chunk_files = check_file_size(translate_audio_file, save_loc)
 
             if chunk_files is not None:

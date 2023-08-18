@@ -21,7 +21,8 @@ def json_contact_GPT(json_read: Dict, prompt: str = "Minimise any other prose.")
     print(f"{full_prompt}\n")
 
     reply = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
+        # model="gpt-3.5-turbo",
+        model="gpt-3.5-turbo-16k",
         messages = [
                 {"role": "system", "content": "You are High Lord Alarak. Your exquisite prose is Legendary."},
                 {"role": "user", "content": full_prompt},

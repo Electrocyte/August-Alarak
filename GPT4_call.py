@@ -66,20 +66,26 @@ if __name__ == '__main__':
     #     ACCESS_TOKEN = read_api_key()
 
     json_globs = glob.glob(text)
+    print(text)
     print(json_globs, "\n")
+
+    clean_out = f"{directory}/clean/"
+    os.makedirs(clean_out, exist_ok=True)
 
     for i in range(0, len(json_globs), 2):
         print(i,i+2)
         texts = json_globs[i:i+2]
         print(texts)
         text1 = texts[0]
-        text2 = texts[1]
+        if len(texts) > 1:
+            text2 = texts[1]
 
         with open(text1, 'r', encoding='utf-8') as f:
             json_text1 = json.load(f)
 
-        with open(text2, 'r', encoding='utf-8') as f:
-            json_text2 = json.load(f)
+        if len(texts) > 1:
+            with open(text2, 'r', encoding='utf-8') as f:
+                json_text2 = json.load(f)
 
         prompt_polish = "You are a great story teller, Alarak, please polish the following text to make it have greater flow. The following is a summary from an audio recording:"
         prompt_spelling = "Polish the spelling of the falling names. The city is called Arenor. There is another city called Algibar. \
@@ -88,7 +94,10 @@ if __name__ == '__main__':
                            Mira, Atara, Selendis. Please correct any spelling mistakes, where required:"
         prompt_bullets = "Now convert this into the most salient 10 bullet points."
 
-        list_of_text = list(json_text1.values()) + list(json_text2.values())
+        if len(texts) > 1:
+            list_of_text = list(json_text1.values()) + list(json_text2.values())
+        else:
+            list_of_text = list(json_text1.values())
         no_chars = len(list_of_text[0])
         print(f"Characters in text: {no_chars}")
 
@@ -97,8 +106,6 @@ if __name__ == '__main__':
             print(texts)
             break
 
-        clean_out = f"{directory}/clean/"
-        os.makedirs(clean_out, exist_ok=True)
         save_flow = f"{clean_out}/clean-flow-{i}.json"
         save_spelling = f"{clean_out}/clean-spelling-{i}.json"
         save_bullets = f"{clean_out}/clean-summary-{i}.json"
@@ -120,7 +127,7 @@ if __name__ == '__main__':
         #     with open(save_flow, 'r', encoding='utf-8') as f:
         #         pol_res = json.load(f)
 
-        print("Polish result: ", pol_res)
+        # print("Polish result: ", pol_res)
 
         if not os.path.exists(save_spelling):
             GPT_reply1 = call_GPT.direct_contact_GPT4(pol_res, prompt_spelling)
@@ -139,7 +146,7 @@ if __name__ == '__main__':
         #     with open(save_spelling, 'r', encoding='utf-8') as f:
         #         spe_res = json.load(f)
 
-        print("Spelling result: ", spe_res)
+        # print("Spelling result: ", spe_res)
 
         if not os.path.exists(save_bullets):
             GPT_reply1 = call_GPT.direct_contact_GPT4(spe_res, prompt_bullets)
