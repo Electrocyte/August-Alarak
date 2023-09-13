@@ -432,7 +432,7 @@ def analyse_GPT4(LoD: List[Dict[str, str]], preprompt: str, postprompt: str, cha
 
 ############################## run one chapter
 
-chapter_count = 7
+chapter_count = 12
 
 chapter_folder = os.path.join(folder, f'{savename}-chapter-{chapter_count}')
 
@@ -539,7 +539,7 @@ def check_original(s: str, ori: List[Dict[str, str]], _type_: str, fname: str) -
                 lst.insert(0, {"Speaker": "$$$", "Speech": "$$$"})
                 # print(len(lst))
 
-        print(len(lst) == len(ori))
+        print(len(lst) == len(ori), "identified:", len(lst), "input:", len(ori))
         if len(lst) == len(ori):
             cleaned_dicts = ori
 

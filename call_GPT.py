@@ -54,7 +54,7 @@ def direct_contact_GPT(text: str, prompt: str = "Minimise any other prose. Reply
     return reply
 
 
-def direct_contact_GPT4(text: str, prompt: str = "Minimise any other prose. Reply in the style of a knowledgable expert where appropriate.") -> Dict:
+def direct_contact_GPT4(text: str, prompt: str = "Minimise any other prose. Reply in the style of a knowledgable expert where appropriate. Reply with no more than 50 words.") -> Dict:
     full_prompt = f"{prompt} {text}"
     print(f"{full_prompt}\n")
 
@@ -66,7 +66,7 @@ def direct_contact_GPT4(text: str, prompt: str = "Minimise any other prose. Repl
         # model="gpt-4-32k-0613",
         # id = "chatcmpl-6z2Dbtif3GwjTkGNkepXWKsRPGB1Q",
         messages = [
-                {"role": "system", "content": "You are High Lord Alarak. Your are a helpful cowriter."},
+                {"role": "system", "content": "You are High Lord Alarak."},
                 {"role": "user", "content": full_prompt},
                 # {"role": "assistant", "content": "The Los Angeles Dodgers won the World Series in 2020."},
                 # {"role": "user", "content": "Where was it played?"}

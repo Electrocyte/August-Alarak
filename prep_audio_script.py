@@ -21,6 +21,7 @@ unknown_speeches = []
 
 for file in files:
     elevenLabsR = []
+    print(file)
     with open(file, 'r') as f:
         elevenLabs = json.load(f)
 
@@ -32,9 +33,9 @@ for file in files:
                 unknown_speeches.append(speech)
 
             speech = i["Speech"].split('. ')  # split speech into list of sentences at '. '
-            print(speaker, speech)
+            # print(speaker, speech)
             elevenLabsR.append({speaker: ["0.25", "0.80", speech]})
-    print(elevenLabsR)
+    # print(elevenLabsR)
 
     fileout = file.split('/')[-1]
     script_out = fileout.replace('.json', '-11LR')
