@@ -8,6 +8,7 @@ import glob
 import os
 import openai
 import whisper
+import re
 
 
 def read_api_key(file_path: str = "gpt4_api") -> str:
@@ -30,6 +31,14 @@ def read_api_key(file_path: str = "gpt4_api") -> str:
 #     for i in data:
 #         res = i["message"]
 #     return res
+
+# Function to extract numbers from the filename to use as the sort key.
+def sort_key(filename):
+    # Use a regular expression to extract the number from the filename.
+    match = re.search(r'\d+', filename)
+    if match:
+        return int(match.group())
+    return 0
 
 
 if __name__ == '__main__':
@@ -119,16 +128,6 @@ if __name__ == '__main__':
             with open(save_flow, 'r', encoding='utf-8') as f:
                 pol_res = json.load(f)
 
-        # if not os.path.exists(save_flow):
-        #     pol_res = process_message(list_of_text, prompt_polish, ACCESS_TOKEN)
-        #     with open(save_flow, 'w', encoding='utf-8') as f:
-        #         json.dump(pol_res, f)
-        # else:
-        #     with open(save_flow, 'r', encoding='utf-8') as f:
-        #         pol_res = json.load(f)
-
-        # print("Polish result: ", pol_res)
-
         if not os.path.exists(save_spelling):
             GPT_reply1 = call_GPT.direct_contact_GPT4(pol_res, prompt_spelling)
             spe_res = GPT_reply1['choices'][0]['message']['content']
@@ -137,16 +136,6 @@ if __name__ == '__main__':
         else:
             with open(save_spelling, 'r', encoding='utf-8') as f:
                 spe_res = json.load(f)
-
-        # if not os.path.exists(save_spelling):
-        #     spe_res = process_message(pol_res, prompt_spelling, ACCESS_TOKEN)
-        #     with open(save_spelling, 'w', encoding='utf-8') as f:
-        #         json.dump(spe_res, f)
-        # else:
-        #     with open(save_spelling, 'r', encoding='utf-8') as f:
-        #         spe_res = json.load(f)
-
-        # print("Spelling result: ", spe_res)
 
         if not os.path.exists(save_bullets):
             GPT_reply1 = call_GPT.direct_contact_GPT4(spe_res, prompt_bullets)
@@ -157,20 +146,13 @@ if __name__ == '__main__':
             with open(save_bullets, 'r', encoding='utf-8') as f:
                 bul_res = json.load(f)
 
-        # if not os.path.exists(save_bullets):
-        #     bul_res = process_message(spe_res, prompt_bullets, ACCESS_TOKEN)
-        #     with open(save_bullets, 'w', encoding='utf-8') as f:
-        #         json.dump(bul_res, f)
-        # else:
-        #     with open(save_bullets, 'r', encoding='utf-8') as f:
-        #         bul_res = json.load(f)
-
         print("Bullets result: ", bul_res)
 
 
     final_bullets = f"{clean_out}/final-summary-take.json"
     prompt_final = "Take these bullet points from a dungeons and dragons game and pick the 25 bullet points that make the best story."
     clean_json_globs = glob.glob(f"{clean_out}/*summary*.json")
+    clean_json_globs.sort(key=sort_key)
     print(clean_json_globs, "\n")
 
     parts = []
@@ -197,11 +179,3 @@ if __name__ == '__main__':
     else:
         with open(final_bullets, 'r', encoding='utf-8') as f:
             save_parts = json.load(f)
-
-    # if not os.path.exists(final_bullets):
-    #     save_parts = process_message(split_parts, prompt_final, ACCESS_TOKEN)
-    #     with open(final_bullets, 'w', encoding='utf-8') as f:
-    #         json.dump(save_parts, f)
-    # else:
-    #     with open(final_bullets, 'r', encoding='utf-8') as f:
-    #         save_parts = json.load(f)
