@@ -218,7 +218,8 @@ missing_headers = all_headers - matched_headers
 
 ################### SPLIT INTO CHUNKS #####################
 
-def split_into_chunks(content, max_chars=4500):
+# def split_into_chunks(content, max_chars=4500):
+def split_into_chunks(content, max_chars=16000):
     """Splits content into chunks of maximum characters, ensuring words are not split."""
     chunks = []
     current_chunk = ""
@@ -432,7 +433,7 @@ def analyse_GPT4(LoD: List[Dict[str, str]], preprompt: str, postprompt: str, cha
 
 ############################## run one chapter
 
-chapter_count = 12
+chapter_count = 18
 
 chapter_folder = os.path.join(folder, f'{savename}-chapter-{chapter_count}')
 

@@ -45,8 +45,8 @@ def save_out(_dict_: Dict, save_loc: str, _type_: str) -> None:
 def chunk_audio(file_to_check: str, format: str, save_loc: str) -> List:
     audio_file = AudioSegment.from_file(file_to_check, format=format)
 
-    # Split the audio into 10-minute chunks
-    chunk_length_ms = 10 * 60 * 1000
+    # Split the audio into 30-minute chunks
+    chunk_length_ms = 30 * 60 * 1000
     chunks = list(range(0, len(audio_file), chunk_length_ms))
 
     # Create a directory to save the chunks

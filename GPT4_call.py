@@ -110,8 +110,10 @@ if __name__ == '__main__':
         no_chars = len(list_of_text[0])
         print(f"Characters in text: {no_chars}")
 
-        if no_chars > 8000:
-            print("Text too long, please shorten to less than 8000 characters.")
+        # this will require editing
+        # if no_chars > 8000:
+        if no_chars > 32000:
+            print("Text too long, please shorten to less than 32000 characters.")
             print(texts)
             break
 
@@ -162,8 +164,8 @@ if __name__ == '__main__':
             part = part.replace("\n\n", "\n")
             parts.append(part)
 
-    # Process any remaining parts if the character count doesn't exceed 7000
-    chunk_size = 7500
+    # Process any remaining parts if the character count doesn't exceed 30000
+    chunk_size = 30000
 
     split_parts = parts
     if len(parts) == 1:
